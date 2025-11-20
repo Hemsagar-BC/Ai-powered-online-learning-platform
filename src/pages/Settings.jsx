@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 
 export default function Settings(){
   const [theme, setTheme] = useState('light')
@@ -13,11 +13,33 @@ export default function Settings(){
   const [privacy, setPrivacy] = useState('public')
   const [language, setLanguage] = useState('en')
 
+  // Load theme from localStorage on mount
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('codeflux-theme')
+    if (savedTheme === 'dark') {
+      setTheme('dark')
+    } else {
+      setTheme('light')
+    }
+  }, [])
+
   const handleNotificationChange = (key) => {
     setNotifications(prev => ({
       ...prev,
       [key]: !prev[key]
     }))
+  }
+
+  // Handle theme change and save to localStorage
+  const handleThemeChange = (newTheme) => {
+    setTheme(newTheme)
+    localStorage.setItem('codeflux-theme', newTheme)
+    // Optionally apply theme globally
+    if (newTheme === 'dark') {
+      document.documentElement.classList.add('dark')
+    } else {
+      document.documentElement.classList.remove('dark')
+    }
   }
 
   return (
@@ -45,7 +67,7 @@ export default function Settings(){
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <button
-                onClick={() => setTheme('light')}
+                onClick={() => handleThemeChange('light')}
                 className={`p-4 rounded-lg border-2 transition ${
                   theme === 'light'
                     ? 'border-indigo-600 bg-indigo-50'
@@ -58,7 +80,7 @@ export default function Settings(){
               </button>
 
               <button
-                onClick={() => setTheme('dark')}
+                onClick={() => handleThemeChange('dark')}
                 className={`p-4 rounded-lg border-2 transition ${
                   theme === 'dark'
                     ? 'border-indigo-600 bg-indigo-50'
