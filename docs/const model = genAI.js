@@ -1,0 +1,1 @@
+const model = genAI.getGenerativeModel({ model: 'gemini-exp-1208' });

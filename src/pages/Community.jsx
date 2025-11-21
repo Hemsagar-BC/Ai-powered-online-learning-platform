@@ -153,25 +153,7 @@ export default function Community(){
         ) : (
           // Community List View
           <div>
-            {/* Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-              <div className="bg-white rounded-xl shadow-md p-6 border-l-4 border-indigo-600">
-                <div className="text-3xl font-bold text-indigo-600">1,258</div>
-                <div className="text-slate-600">Total Community Members</div>
-              </div>
-              <div className="bg-white rounded-xl shadow-md p-6 border-l-4 border-green-600">
-                <div className="text-3xl font-bold text-green-600">342</div>
-                <div className="text-slate-600">Active Discussions</div>
-              </div>
-              <div className="bg-white rounded-xl shadow-md p-6 border-l-4 border-purple-600">
-                <div className="text-3xl font-bold text-purple-600">28</div>
-                <div className="text-slate-600">Active Communities</div>
-              </div>
-              <div className="bg-white rounded-xl shadow-md p-6 border-l-4 border-orange-600">
-                <div className="text-3xl font-bold text-orange-600">156</div>
-                <div className="text-slate-600">Helpful Answers</div>
-              </div>
-            </div>
+    
 
             {/* Search */}
             <div className="mb-8">
