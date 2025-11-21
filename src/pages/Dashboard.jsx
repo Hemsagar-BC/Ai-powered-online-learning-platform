@@ -9,11 +9,13 @@ import { formatDateForDb, getRelativeDate } from '../lib/dateUtils'
 import CreateCourseModal from '../components/CreateCourseModal'
 import StreakWidget from '../components/StreakWidget'
 import { getContinueLearningCourses } from '../lib/firebaseCoursesService'
+import { useStudyTimer, formatStudyTime } from '../lib/studyTimerService'
 
 export default function Dashboard(){
   const navigate = useNavigate()
   const { user, loading } = useAuth()
   const { streak } = useStreak()
+  const { todayStudyTime, isTracking } = useStudyTimer()
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [showSignInPrompt, setShowSignInPrompt] = useState(false)
   const [isGuestMode, setIsGuestMode] = useState(false)
@@ -257,10 +259,18 @@ export default function Dashboard(){
       <section className="grid grid-cols-5 gap-6 mb-8">
         <StreakWidget />
         <div className="card">
-          <h3 className="text-sm text-slate-500">Today's Study</h3>
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="text-sm text-slate-500">Today's Study</h3>
+            {isTracking && (
+              <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-green-100">
+                <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                <span className="text-xs font-semibold text-green-700">Live</span>
+              </span>
+            )}
+          </div>
           <div className="mt-3 text-2xl font-semibold flex items-center gap-2">
             <span>⏱️</span>
-            <span>{Math.floor(todaysSessions / 60)}h {todaysSessions % 60}m</span>
+            <span>{formatStudyTime(todayStudyTime)}</span>
           </div>
         </div>
         <div className="card">

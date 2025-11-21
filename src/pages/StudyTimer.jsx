@@ -29,6 +29,14 @@ const SUBJECTS = [
   'Music'
 ]
 
+// Format seconds to HH:MM:SS
+const formatTimeSpent = (seconds) => {
+  const hrs = String(Math.floor(seconds / 3600)).padStart(2, '0')
+  const mins = String(Math.floor((seconds % 3600) / 60)).padStart(2, '0')
+  const secs = String(seconds % 60).padStart(2, '0')
+  return `${hrs}:${mins}:${secs}`
+}
+
 export default function StudyTimer() {
   const navigate = useNavigate()
   const { user, showNotification } = useAuth()
@@ -38,6 +46,13 @@ export default function StudyTimer() {
   const [showSessionEnd, setShowSessionEnd] = useState(false)
   const [sessionDuration, setSessionDuration] = useState(0)
   const [isSavingSession, setIsSavingSession] = useState(false)
+  
+  // Real-time study time tracking
+  const [totalSeconds, setTotalSeconds] = useState(() => {
+    return Number(localStorage.getItem('studyTime')) || 0
+  })
+  const [isActive, setIsActive] = useState(true)
+  const [lastActive, setLastActive] = useState(Date.now())
 
   const {
     timeLeft,
@@ -51,6 +66,38 @@ export default function StudyTimer() {
     elapsedSeconds,
     initialTime
   } = useTimer('pomodoro', 25)
+
+  // Real-time study time tracker - updates every second
+  useEffect(() => {
+    const timer = setInterval(() => {
+      if (isActive) {
+        setTotalSeconds((prev) => {
+          const now = Date.now()
+          const newTotal = prev + Math.floor((now - lastActive) / 1000)
+          localStorage.setItem('studyTime', newTotal)
+          setLastActive(now)
+          return newTotal
+        })
+      }
+    }, 1000)
+
+    return () => clearInterval(timer)
+  }, [isActive, lastActive])
+
+  // Handle tab visibility changes
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        setIsActive(false) // pause tracking
+      } else {
+        setIsActive(true) // resume tracking
+        setLastActive(Date.now()) // reset timestamp
+      }
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
+  }, [])
 
   // Play notification sound when timer ends
   useEffect(() => {
@@ -92,40 +139,47 @@ export default function StudyTimer() {
       return
     }
 
-    if (sessionDuration === 0) {
-      showNotification('Session duration too short', 'error')
+    if (sessionDuration === 0 && totalSeconds < 600) {
+      // Minimum 10 minutes (600 seconds)
+      showNotification('Session duration too short (minimum 10 minutes)', 'error')
       return
     }
 
     try {
       setIsSavingSession(true)
 
+      // Use total study time if session duration is 0
+      const finalDuration = sessionDuration || Math.floor(totalSeconds / 60)
+
       // Save session to Firestore
       const sessionRef = await addDoc(collection(firestore, 'studySessions'), {
         userId: user.uid,
         subject: subject || 'Unnamed',
         sessionName: sessionName || `${subject} Session`,
-        duration: sessionDuration,
+        duration: finalDuration,
         date: formatDateForDb(),
-        startTime: Timestamp.fromMillis(Date.now() - sessionDuration * 60000),
+        startTime: Timestamp.fromMillis(Date.now() - finalDuration * 60000),
         endTime: Timestamp.now(),
         type: 'solo',
-        roomId: null
+        roomId: null,
+        actualTimeSpent: totalSeconds // Store actual web app time spent
       })
 
       // Update streak
-      await updateStreak(sessionDuration)
+      await updateStreak(finalDuration)
 
       showNotification(
-        `✅ Session saved! 🔥 +${Math.floor(sessionDuration / 25)} Pomodoro(s)`,
+        `✅ Session saved! 🔥 +${Math.floor(finalDuration / 25)} Pomodoro(s)`,
         'success'
       )
 
-      // Reset form
+      // Reset form and tracking
       setSubject('')
       setSessionName('')
       setShowSessionEnd(false)
       resetTimer()
+      setTotalSeconds(0)
+      localStorage.setItem('studyTime', 0)
 
       // Return to dashboard after 2 seconds
       setTimeout(() => {
@@ -145,6 +199,9 @@ export default function StudyTimer() {
     resetTimer()
     setSubject('')
     setSessionName('')
+    // Reset study time tracker
+    setTotalSeconds(0)
+    localStorage.setItem('studyTime', 0)
   }
 
   if (showSessionEnd) {
@@ -170,6 +227,10 @@ export default function StudyTimer() {
                   <p className="text-sm text-gray-600 mb-1">Duration</p>
                   <p className="text-lg font-semibold text-gray-900">{sessionDuration} min</p>
                 </div>
+              </div>
+              <div className="border-t border-blue-200 pt-4 mt-4">
+                <p className="text-sm text-gray-600 mb-1">🕐 Actual Time Spent in App</p>
+                <p className="text-xl font-bold text-blue-600">{formatTimeSpent(totalSeconds)}</p>
               </div>
             </div>
 
@@ -213,6 +274,19 @@ export default function StudyTimer() {
 
         {/* Main Timer Card */}
         <div className="bg-white rounded-3xl shadow-2xl p-8 mb-6 backdrop-blur-sm bg-white/95">
+          {/* Real-Time Study Time Tracker */}
+          <div className="bg-gradient-to-r from-orange-50 to-red-50 rounded-xl p-4 mb-6 border-2 border-orange-200">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs font-semibold text-orange-600 uppercase tracking-wide mb-1">📊 Total Study Time Today</p>
+                <p className="text-3xl font-bold text-orange-900">{formatTimeSpent(totalSeconds)}</p>
+                <p className="text-xs text-orange-600 mt-1">
+                  {isActive ? '🟢 Tracking' : '⏸ Paused'}
+                </p>
+              </div>
+              <div className="text-5xl">{isActive ? '⏱️' : '⏸️'}</div>
+            </div>
+          </div>
           {/* Mode Selector */}
           <div className="flex gap-3 mb-8">
             {[

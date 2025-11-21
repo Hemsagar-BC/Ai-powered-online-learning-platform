@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ChevronLeft, BookOpen, Play, CheckCircle, Zap, Target, Map, Volume2, ExternalLink } from 'lucide-react';
+import { ChevronLeft, BookOpen, Play, CheckCircle, Zap, Target, Map, Volume2, ExternalLink, Loader } from 'lucide-react';
 import chapterService from '../lib/chapterService';
+import { getBestYouTubeVideo, getQualityYouTubeVideos } from '../lib/youtubeService';
 
 export default function ChapterDetail() {
   const { id: courseId, cid: chapterId } = useParams();
@@ -13,6 +14,8 @@ export default function ChapterDetail() {
   const [chapterDetails, setChapterDetails] = useState(null);
   const [fetchingDetails, setFetchingDetails] = useState(false);
   const [detailsError, setDetailsError] = useState(null);
+  const [fetchingVideo, setFetchingVideo] = useState(false);
+  const [alternativeVideos, setAlternativeVideos] = useState([]);
 
   useEffect(() => {
     const loadCourseData = async () => {
@@ -38,9 +41,8 @@ export default function ChapterDetail() {
             
             setChapter(chapterData);
             
-            if (chapterData.youtubeVideos && chapterData.youtubeVideos.length > 0) {
-              setSelectedVideo(chapterData.youtubeVideos[0]);
-            }
+            // Fetch best YouTube video using API
+            await fetchBestYouTubeVideo(chapterData, foundCourse);
 
             await fetchChapterDetails(foundCourse, chapterData);
           }
@@ -54,6 +56,41 @@ export default function ChapterDetail() {
 
     loadCourseData();
   }, [courseId, chapterId]);
+
+  const fetchBestYouTubeVideo = async (chapterData, courseData) => {
+    setFetchingVideo(true);
+    try {
+      const searchQuery = `${chapterData.title} ${courseData.title} tutorial`;
+      console.log(`🎬 Fetching best YouTube video for: ${searchQuery}`);
+      
+      // Get the best video
+      const bestVideo = await getBestYouTubeVideo(searchQuery);
+      
+      if (bestVideo) {
+        setSelectedVideo(bestVideo);
+        console.log(`✅ Best video found: ${bestVideo.title}`);
+      } else {
+        // Fallback to local videos if any
+        if (chapterData.youtubeVideos && chapterData.youtubeVideos.length > 0) {
+          setSelectedVideo(chapterData.youtubeVideos[0]);
+        }
+      }
+      
+      // Get alternative videos
+      const alternatives = await getQualityYouTubeVideos(searchQuery, 3);
+      if (alternatives.length > 0) {
+        setAlternativeVideos(alternatives.slice(1)); // Exclude the first one (best)
+      }
+    } catch (error) {
+      console.error('Error fetching YouTube video:', error);
+      // Fallback to local videos
+      if (chapterData.youtubeVideos && chapterData.youtubeVideos.length > 0) {
+        setSelectedVideo(chapterData.youtubeVideos[0]);
+      }
+    } finally {
+      setFetchingVideo(false);
+    }
+  }
 
   const fetchChapterDetails = async (courseData, chapterData) => {
     setFetchingDetails(true);
@@ -192,37 +229,59 @@ export default function ChapterDetail() {
                   )}
                   
                   <h4 className="font-semibold text-white mb-1 text-sm line-clamp-2">{selectedVideo.title}</h4>
-                  <p className="text-xs text-gray-400 mb-1">by {selectedVideo.channel}</p>
-                  <p className="text-xs text-gray-500 mb-4">⏱️ {selectedVideo.duration}</p>
+                  <p className="text-xs text-gray-400 mb-3">by {selectedVideo.channel}</p>
                   
-                  <a
-                    href={`https://www.youtube.com/results?search_query=${encodeURIComponent(selectedVideo.title + ' ' + selectedVideo.channel)}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="w-full inline-flex items-center justify-center gap-2 px-3 py-2 bg-red-600 hover:bg-red-700 text-white rounded text-sm transition"
+                  {/* Video Stats */}
+                  <div className="grid grid-cols-2 gap-2 mb-4 text-xs">
+                    {selectedVideo.viewCount && (
+                      <div className="bg-slate-700/50 rounded p-2">
+                        <p className="text-gray-400">Views</p>
+                        <p className="text-white font-semibold">{selectedVideo.viewCount}</p>
+                      </div>
+                    )}
+                    {selectedVideo.duration && (
+                      <div className="bg-slate-700/50 rounded p-2">
+                        <p className="text-gray-400">Duration</p>
+                        <p className="text-white font-semibold">{selectedVideo.duration}</p>
+                      </div>
+                    )}
+                  </div>
+                  
+                  <button
+                    className="w-full inline-flex items-center justify-center gap-2 px-3 py-2 bg-red-600 hover:bg-red-700 text-white rounded text-sm transition cursor-pointer"
                   >
                     <Play className="w-3 h-3" />
-                    Watch
-                  </a>
+                    Playing
+                  </button>
 
                   {selectedVideo.type === 'best' && (
                     <div className="mt-3 px-2 py-1 bg-green-500/20 text-green-400 rounded text-xs font-semibold text-center">
-                      ⭐ Best Video
+                      ⭐ Best Quality Video (Quality Score: {selectedVideo.quality || 0}/100)
                     </div>
                   )}
                   {selectedVideo.type === 'preferred' && (
                     <div className="mt-3 px-2 py-1 bg-purple-500/20 text-purple-400 rounded text-xs font-semibold text-center">
-                      💎 Popular
+                      💎 Popular Video (Quality Score: {selectedVideo.quality || 0}/100)
+                    </div>
+                  )}
+                  {!selectedVideo.type && selectedVideo.quality && (
+                    <div className="mt-3 px-2 py-1 bg-slate-700/50 text-gray-300 rounded text-xs text-center">
+                      Quality Score: {selectedVideo.quality}/100
                     </div>
                   )}
                 </div>
 
                 {/* Video Selection */}
-                {chapter.youtubeVideos && chapter.youtubeVideos.length > 1 && (
+                {(alternativeVideos.length > 0 || (chapter.youtubeVideos && chapter.youtubeVideos.length > 1)) && (
                   <div className="border-t border-slate-700 p-4">
-                    <p className="text-xs text-gray-400 mb-3 font-semibold">More Videos</p>
+                    <div className="flex items-center gap-2 mb-3">
+                      <p className="text-xs text-gray-400 font-semibold">
+                        {fetchingVideo ? 'Loading videos...' : 'More Videos'}
+                      </p>
+                      {fetchingVideo && <Loader className="w-3 h-3 animate-spin text-blue-400" />}
+                    </div>
                     <div className="space-y-2 max-h-48 overflow-y-auto">
-                      {chapter.youtubeVideos.map((video, idx) => (
+                      {(alternativeVideos.length > 0 ? alternativeVideos : chapter.youtubeVideos || []).map((video, idx) => (
                         <button
                           key={idx}
                           onClick={() => setSelectedVideo(video)}
@@ -232,8 +291,18 @@ export default function ChapterDetail() {
                               : 'bg-slate-700/30 hover:bg-slate-700/50'
                           }`}
                         >
-                          <p className="font-semibold text-white line-clamp-2">{video.title}</p>
-                          <p className="text-gray-400 text-xs mt-1">{video.channel}</p>
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="flex-1">
+                              <p className="font-semibold text-white line-clamp-2">{video.title}</p>
+                              <p className="text-gray-400 text-xs mt-1">{video.channel}</p>
+                              {video.quality && (
+                                <p className="text-gray-500 text-xs mt-1">📊 Quality: {video.quality}/100</p>
+                              )}
+                            </div>
+                            {video.type === 'best' && (
+                              <span className="px-1 py-0.5 bg-green-500/20 text-green-400 rounded text-xs font-semibold flex-shrink-0">⭐</span>
+                            )}
+                          </div>
                         </button>
                       ))}
                     </div>

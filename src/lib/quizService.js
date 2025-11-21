@@ -1,6 +1,7 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY);
+const API_KEY = 'AIzaSyBXUIu04K2XSHLVpwY5AXwbjrbXgk-sy4o'
+const genAI = new GoogleGenerativeAI(API_KEY);
 
 /**
  * Generate quiz questions dynamically based on course content
