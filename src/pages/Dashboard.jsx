@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { FolderOpen } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { useStreak } from '../contexts/StreakContext'
 import { signInWithGoogle } from '../lib/firebase'
@@ -388,17 +389,25 @@ export default function Dashboard(){
             {courses.map(course => (
               <div 
                 key={course.id} 
-                className="w-64 card shrink-0 cursor-pointer hover:shadow-lg transition-shadow"
+                className="w-64 card shrink-0 cursor-pointer hover:shadow-xl transition-all hover:scale-105"
                 onClick={() => navigate(`/course/${course.id}`)}
               >
-                <div className="h-32 bg-gradient-to-r from-primary-500 to-primary-600 rounded-md mb-4"></div>
+                <div className="h-32 bg-gradient-to-br from-purple-600 via-pink-500 to-purple-700 rounded-lg mb-4 flex items-center justify-center relative overflow-hidden">
+                  {/* Animated background elements */}
+                  <div className="absolute inset-0 opacity-30">
+                    <div className="absolute top-2 right-2 w-16 h-16 bg-white rounded-full opacity-20"></div>
+                    <div className="absolute bottom-3 left-3 w-12 h-12 bg-white rounded-full opacity-15"></div>
+                  </div>
+                  {/* Folder Icon */}
+                  <FolderOpen className="w-16 h-16 text-white drop-shadow-lg relative z-10" />
+                </div>
                 <h3 className="font-semibold text-gray-900 truncate">{course.title}</h3>
                 <div className="mt-2 text-sm text-slate-500">
                   Chapter {course.currentChapter || 1} of {course.totalChapters || 0}
                 </div>
                 <div className="mt-3 w-full bg-gray-200 rounded-full h-2">
                   <div 
-                    className="bg-primary-500 h-2 rounded-full"
+                    className="bg-gradient-to-r from-purple-600 to-pink-500 h-2 rounded-full transition-all"
                     style={{ width: `${course.progress || 0}%` }}
                   />
                 </div>

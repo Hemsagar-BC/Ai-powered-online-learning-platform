@@ -29,26 +29,79 @@ const googleClient = new OAuth2Client(
 const genAI = process.env.VITE_GEMINI_API_KEY ? new GoogleGenerativeAI(process.env.VITE_GEMINI_API_KEY) : null;
 
 // YouTube API Setup
-const YOUTUBE_API_KEY = process.env.VITE_YOUTUBE_API_KEY || 'AIzaSyDtYElv6Bh1gFau_sKKas-jfL9zMsvEpnE';
+const YOUTUBE_API_KEY = process.env.VITE_YOUTUBE_API_KEY || 'AIzaSyCofp7gg86IRvUAG2sz4KaSnjo-8Jtp47w';
 const YOUTUBE_API_URL = 'https://www.googleapis.com/youtube/v3';
+
+// Helper function to extract search query from chapter content
+// Incorporates: chapter title, main topic, description, and keypoints
+const extractSearchQuery = (chapter, mainTopic, chapterIndex, totalChapters, userDescription = '') => {
+  // CRITICAL: Use chapter title as primary source for search query
+  // This ensures YouTube searches match the specific chapter content
+  
+  let searchTerms = mainTopic;
+  
+  // PRIMARY: Use chapter title if available - it's most specific
+  if (chapter.title && chapter.title.length > 5) {
+    const chapterTitle = chapter.title.toLowerCase();
+    
+    // Check if chapter title already includes the main topic
+    if (chapterTitle.includes(mainTopic.toLowerCase())) {
+      // Use chapter title as-is for search
+      searchTerms = chapter.title;
+    } else {
+      // Combine main topic with chapter title for better results
+      searchTerms = `${mainTopic} ${chapter.title}`;
+    }
+  } 
+  // SECONDARY: Use chapter keyPoints if title is not available
+  else if (chapter.keyPoints && chapter.keyPoints.length > 0) {
+    const firstKeyPoint = chapter.keyPoints[0];
+    if (firstKeyPoint && firstKeyPoint.length > 5) {
+      searchTerms = `${mainTopic} ${firstKeyPoint} tutorial`;
+    } else {
+      searchTerms = `${mainTopic} tutorial`;
+    }
+  }
+  // TERTIARY: Use position-based fallback
+  else if (chapterIndex === 0) {
+    searchTerms = `${mainTopic} introduction basics`;
+  } else if (chapterIndex === totalChapters - 1) {
+    searchTerms = `${mainTopic} advanced techniques`;
+  } else {
+    searchTerms = `${mainTopic} tutorial`;
+  }
+  
+  // ENHANCEMENT: Add user description context if available
+  // This helps YouTube find videos more aligned with user intent
+  if (userDescription && userDescription.length > 5) {
+    const descKeywords = userDescription
+      .split(' ')
+      .filter(word => word.length > 4 && !['course', 'learn', 'about'].includes(word.toLowerCase()))
+      .slice(0, 2)
+      .join(' ');
+    
+    if (descKeywords && !searchTerms.toLowerCase().includes(descKeywords.toLowerCase())) {
+      searchTerms = `${searchTerms} ${descKeywords}`;
+    }
+  }
+  
+  console.log(`  🔍 Search query for chapter "${chapter.title}": "${searchTerms}"`);
+  return searchTerms;
+};
 
 // Function to fetch YouTube videos for a topic
 const fetchYouTubeVideos = async (topic, maxResults = 3) => {
   try {
     console.log(`🎬 Fetching YouTube videos for topic: "${topic}"`);
     
-    // Improve search query with educational keywords
-    const improvedQuery = `${topic} tutorial educational explanation`;
-    
+    // Search with exact topic first to get most relevant results
     const response = await axios.get(`${YOUTUBE_API_URL}/search`, {
       params: {
-        q: improvedQuery,
+        q: topic, // Use exact topic first
         part: 'snippet',
         type: 'video',
-        maxResults: Math.min((maxResults + 2) * 2, 50), // Fetch extra to filter
-        order: 'relevance', // Changed to relevance for better matching
-        relevanceLanguage: 'en',
-        videoDuration: 'medium', // 4-20 minutes (educational sweet spot)
+        maxResults: Math.min((maxResults + 5) * 3, 50), // Fetch more to filter by view count
+        order: 'relevance', // Get most relevant videos first
         key: YOUTUBE_API_KEY
       }
     });
@@ -58,26 +111,37 @@ const fetchYouTubeVideos = async (topic, maxResults = 3) => {
       return [];
     }
 
-    // Filter for educational content
+    console.log(`   📌 Received ${response.data.items.length} results from YouTube API`);
+
+    // Simple filter for topic relevance only
     let filteredItems = response.data.items;
+    
+    // Filter for topic relevance - check if topic is in title or description
     filteredItems = filteredItems.filter(item => {
       const title = item.snippet.title.toLowerCase();
       const description = (item.snippet.description || '').toLowerCase();
+      const topicLower = topic.toLowerCase();
       
-      return (
-        (title.includes('tutorial') || title.includes('lesson') || title.includes('course') || 
-         title.includes('guide') || title.includes('explanation') || title.includes('learn')) ||
-        (description.includes('tutorial') || description.includes('learn') || description.includes('guide'))
-      );
+      // Video must be relevant to the topic (in title OR description)
+      const isRelevant = title.includes(topicLower) || description.includes(topicLower);
+      
+      if (!isRelevant) {
+        console.log(`   ❌ Filtered out: "${item.snippet.title}" (not relevant to ${topic})`);
+      }
+      
+      return isRelevant;
     });
 
-    // If no educational content found, use original results
+    console.log(`   ✅ After topic relevance filter: ${filteredItems.length} videos`);
+
+    // If no results, return empty (don't fall back to unrelated videos)
     if (filteredItems.length === 0) {
-      filteredItems = response.data.items;
+      console.warn(`⚠️ No relevant videos found for: ${topic}`);
+      return [];
     }
 
-    // Get video details (duration, view count)
-    const videoIds = filteredItems.slice(0, maxResults).map(item => item.id.videoId).join(',');
+    // Get video details (duration, view count, likes) - get more than needed to sort
+    const videoIds = filteredItems.slice(0, maxResults * 2).map(item => item.id.videoId).join(',');
     
     const detailsResponse = await axios.get(`${YOUTUBE_API_URL}/videos`, {
       params: {
@@ -90,6 +154,7 @@ const fetchYouTubeVideos = async (topic, maxResults = 3) => {
     const videos = detailsResponse.data.items.map((item, index) => {
       const duration = item.contentDetails?.duration || 'PT15M';
       const viewCount = parseInt(item.statistics?.viewCount || 0);
+      const likeCount = parseInt(item.statistics?.likeCount || 0);
       const title = item.snippet?.title || 'Untitled';
       const channelTitle = item.snippet?.channelTitle || 'Educational Channel';
       
@@ -98,26 +163,57 @@ const fetchYouTubeVideos = async (topic, maxResults = 3) => {
         channel: channelTitle,
         duration: convertISO8601Duration(duration),
         videoId: item.id,
-        type: index === 0 ? 'best' : index === 1 ? 'preferred' : 'supplementary',
         url: `https://www.youtube.com/watch?v=${item.id}`,
-        viewCount: viewCount,
+        viewCount: viewCount || 0, // Ensure viewCount defaults to 0
+        likeCount: likeCount || 0,
         thumbnail: item.snippet?.thumbnails?.medium?.url,
-        quality: calculateVideoQuality(viewCount, item.statistics?.likeCount || 0)
+        quality: calculateVideoQuality(viewCount, likeCount)
       };
     });
 
-    // Sort by quality/viewCount to get most viewed at top
-    videos.sort((a, b) => (b.quality || b.viewCount) - (a.quality || a.viewCount));
+    // CRITICAL: Sort by viewCount (most important) to ensure most viewed video is first
+    // This is the PRIMARY sorting mechanism to get the BEST video
+    videos.sort((a, b) => {
+      // Primary: Sort by view count (most viewed first) - HIGHEST TO LOWEST
+      const viewDiff = (b.viewCount || 0) - (a.viewCount || 0);
+      if (viewDiff !== 0) {
+        console.log(`   📊 Comparing: "${a.title}" (${(a.viewCount || 0).toLocaleString()} views) vs "${b.title}" (${(b.viewCount || 0).toLocaleString()} views)`);
+        return viewDiff;
+      }
+      
+      // Secondary: Sort by quality if view counts are similar
+      const qualityDiff = (b.quality || 0) - (a.quality || 0);
+      if (qualityDiff !== 0) {
+        console.log(`   ⭐ Same view count, sorting by quality: "${a.title}" (${a.quality || 0}) vs "${b.title}" (${b.quality || 0})`);
+        return qualityDiff;
+      }
+      
+      // Tertiary: Sort by like count if still tied
+      return (b.likeCount || 0) - (a.likeCount || 0);
+    });
     
-    // Update type based on sorted position
-    videos.forEach((video, index) => {
+    // Take top N results after sorting by view count
+    const topVideos = videos.slice(0, maxResults);
+    
+    // Update type based on sorted position (best = most viewed)
+    topVideos.forEach((video, index) => {
       video.type = index === 0 ? 'best' : index === 1 ? 'preferred' : 'supplementary';
     });
 
-    console.log(`✅ Found ${videos.length} videos for: ${topic}`);
-    return videos;
+    console.log(`✅ Found ${topVideos.length} videos for: "${topic}"`);
+    console.log(`   📊 Top video (BEST): "${topVideos[0]?.title}"`);
+    console.log(`   📊 View count: ${(topVideos[0]?.viewCount || 0).toLocaleString()} views`);
+    console.log(`   📊 Channel: ${topVideos[0]?.channel || 'Unknown'}`);
+    console.log(`   📊 Duration: ${topVideos[0]?.duration || 'Unknown'}`);
+    console.log(`   📊 Quality Score: ${topVideos[0]?.quality || 0}/100`);
+    
+    return topVideos;
   } catch (error) {
     console.error('❌ Error fetching YouTube videos:', error.message);
+    if (error.response) {
+      console.error('   Response status:', error.response.status);
+      console.error('   Response data:', JSON.stringify(error.response.data, null, 2));
+    }
     return [];
   }
 };
@@ -254,6 +350,37 @@ const verifyToken = (req, res, next) => {
 // Health check
 app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', message: 'CodeFlux Backend is running' });
+});
+
+// YouTube Video Search - Get videos for a specific topic
+app.get('/api/youtube/search', async (req, res) => {
+  try {
+    const { topic } = req.query;
+    
+    if (!topic) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Topic is required' 
+      });
+    }
+    
+    console.log(`🎬 YouTube API request for topic: "${topic}"`);
+    
+    const videos = await fetchYouTubeVideos(topic, 5);
+    
+    res.json({
+      success: true,
+      topic,
+      videos,
+      count: videos.length
+    });
+  } catch (error) {
+    console.error('❌ Error in YouTube search endpoint:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: error.message || 'Failed to search YouTube videos' 
+    });
+  }
 });
 
 // Google OAuth Login - Generate Auth URL
@@ -504,26 +631,7 @@ app.post('/api/courses/generate', verifyToken, async (req, res) => {
           ],
           keyConcepts: ['Foundation', 'Core Principles', 'Best Practices'],
           learningOutcomes: ['Understand fundamentals', 'Apply knowledge', 'Master skills'],
-          youtubeVideos: [
-            { 
-              title: 'Introduction Video', 
-              channel: 'Educational Channel', 
-              duration: '15 min', 
-              videoId: 'jNQXAC9IVRw', // A real YouTube video ID
-              type: 'best',
-              url: 'https://www.youtube.com/watch?v=jNQXAC9IVRw',
-              thumbnail: 'https://img.youtube.com/vi/jNQXAC9IVRw/mqdefault.jpg'
-            }, 
-            { 
-              title: 'Tutorial Video', 
-              channel: 'Educational Channel', 
-              duration: '20 min', 
-              videoId: 'jNQXAC9IVRw',
-              type: 'preferred',
-              url: 'https://www.youtube.com/watch?v=jNQXAC9IVRw',
-              thumbnail: 'https://img.youtube.com/vi/jNQXAC9IVRw/mqdefault.jpg'
-            }
-          ],
+          youtubeVideos: [],
           sourceLinks: ['https://example.com']
         }))
       };
@@ -638,8 +746,12 @@ Create the course now. Remember: Make it about "${title}", not generic content.`
         objectives: courseData.objectives || ['Learn fundamentals', 'Apply knowledge', 'Master advanced concepts'],
         learningPath: courseData.learningPath || ['Start with basics', 'Progress to intermediate', 'Master advanced concepts'],
         chapters: await Promise.all((courseData.chapters || []).map(async (ch, i) => {
-          // Fetch real YouTube videos for each chapter
-          const youtubeVideos = await fetchYouTubeVideos(ch.title || title, 3);
+          // Extract best search query from chapter content with chapter position context and user description
+          const searchQuery = extractSearchQuery(ch, title, i, courseData.chapters.length, description);
+          
+          // Fetch real YouTube videos for each chapter using extracted search query
+          console.log(`📺 Chapter ${i + 1}: Searching YouTube for "${searchQuery}"`);
+          const youtubeVideos = await fetchYouTubeVideos(searchQuery, 3);
           
           return {
             id: i + 1,
@@ -653,35 +765,7 @@ Create the course now. Remember: Make it about "${title}", not generic content.`
               bestPractices: 'Best practices for optimal results'
             },
             roadmap: ch.roadmap || `Learning roadmap for ${ch.title || title}`,
-            youtubeVideos: youtubeVideos.length > 0 ? youtubeVideos : [
-              {
-                title: `${ch.title || title} - Comprehensive Tutorial`,
-                channel: 'Educational Channel',
-                duration: '15-20 min',
-                videoId: 'jNQXAC9IVRw', // Use a real educational video
-                type: 'best',
-                url: 'https://www.youtube.com/watch?v=jNQXAC9IVRw',
-                thumbnail: 'https://img.youtube.com/vi/jNQXAC9IVRw/mqdefault.jpg'
-              },
-              {
-                title: `${ch.title || title} - Alternative Explanation`,
-                channel: 'Educational Channel',
-                duration: '20-30 min',
-                videoId: 'jNQXAC9IVRw',
-                type: 'preferred',
-                url: 'https://www.youtube.com/watch?v=jNQXAC9IVRw',
-                thumbnail: 'https://img.youtube.com/vi/jNQXAC9IVRw/mqdefault.jpg'
-              },
-              {
-                title: `${ch.title || title} - Deep Dive`,
-                channel: 'Educational Channel',
-                duration: '10-15 min',
-                videoId: 'jNQXAC9IVRw',
-                type: 'supplementary',
-                url: 'https://www.youtube.com/watch?v=jNQXAC9IVRw',
-                thumbnail: 'https://img.youtube.com/vi/jNQXAC9IVRw/mqdefault.jpg'
-              }
-            ],
+            youtubeVideos: youtubeVideos.length > 0 ? youtubeVideos : [],
             sourceLinks: ch.sourceLinks || ['https://docs.example.com', 'https://tutorial.example.com']
           };
         })),
@@ -714,108 +798,126 @@ Create the course now. Remember: Make it about "${title}", not generic content.`
           `Apply ${title} knowledge to real-world scenarios and projects`,
           `Master advanced techniques and best practices in ${title}`
         ],
-        chapters: Array.from({ length: chapters }, (_, i) => ({
-          id: i + 1,
-          title: i === 0 
+        chapters: await Promise.all(Array.from({ length: chapters }, async (_, i) => {
+          // Create contextual chapter search queries based on progression
+          // Include user description for better video matching
+          let searchQuery = title;
+          
+          // Create chapter title based on position
+          const chapterTitle = i === 0 
             ? `Introduction to ${title}` 
             : i === chapters - 1 
             ? `Advanced ${title} and Future Trends`
-            : `${title}: Intermediate Concepts - Part ${i}`,
-          description: i === 0
-            ? `Learn the basics and fundamentals of ${title}`
-            : i === chapters - 1
-            ? `Explore advanced topics and emerging trends in ${title}`
-            : `Deep dive into intermediate ${title} concepts and applications`,
-          keyPoints: [
-            `Fundamental concepts of ${title}`,
-            `Practical applications and use cases in ${title}`,
-            `Best practices and optimization techniques for ${title}`
-          ],
-          // NEW: Add structured lesson data for ChapterDetail component
-          lessons: [
-            {
-              id: '1.1',
-              topic: `Introduction to ${title}`,
-              learningGoal: `Understand the fundamentals of ${title}`,
-              youtubeVideo: `${title} introduction basics`,
-              resources: `Overview: ${title} Guide`
-            },
-            {
-              id: '1.2',
-              topic: `Core Concepts of ${title}`,
-              learningGoal: `Master the essential concepts`,
-              youtubeVideo: `${title} core concepts explained`,
-              resources: `Study Guide: Key Terms & Definitions`
-            },
-            {
-              id: '1.3',
-              topic: `Practical Application of ${title}`,
-              learningGoal: `Apply concepts to real-world scenarios`,
-              youtubeVideo: `${title} real-world examples and applications`,
-              resources: `Project Template & Code Examples`
+            : `${title}: Intermediate Concepts - Part ${i}`;
+          
+          // Build search query with description context
+          if (i === 0) {
+            searchQuery = `${title} introduction basics`;
+          } else if (i === chapters - 1) {
+            searchQuery = `${title} advanced techniques best practices`;
+          } else if (i === Math.floor(chapters / 2)) {
+            searchQuery = `${title} intermediate concepts applications`;
+          } else {
+            searchQuery = `${title} tutorial step by step`;
+          }
+          
+          // Add description keywords if available
+          if (description && description.length > 5) {
+            const descKeywords = description
+              .split(' ')
+              .filter(word => word.length > 4 && !['course', 'learn', 'about'].includes(word.toLowerCase()))
+              .slice(0, 2)
+              .join(' ');
+            
+            if (descKeywords && !searchQuery.toLowerCase().includes(descKeywords.toLowerCase())) {
+              searchQuery = `${searchQuery} ${descKeywords}`;
             }
-          ],
-          keyConcepts: [
-            `Foundation of ${title}`,
-            `Core Principles and Theory`,
-            `Practical Implementation`,
-            `Best Practices in ${title}`,
-            `Advanced Techniques`
-          ],
-          learningOutcomes: [
-            `Understand the fundamentals and history of ${title}`,
-            `Apply practical techniques and methods`,
-            `Troubleshoot common issues in ${title}`,
-            `Implement best practices and optimization`
-          ],
-          practicalExercises: [
-            {
-              title: 'Beginner Exercise',
-              description: `Start with basic ${title} concepts`,
-              difficulty: 'beginner'
-            },
-            {
-              title: 'Intermediate Project',
-              description: `Apply ${title} techniques in a practical project`,
-              difficulty: 'intermediate'
-            }
-          ],
-          youtubeVideos: [
-            {
-              title: `${title} for Beginners - Complete Guide`,
-              channel: 'Educational Channel',
-              duration: '15-20 min',
-              type: 'best'
-            },
-            {
-              title: `${title} - In-Depth Tutorial`,
-              channel: 'Tech Channel',
-              duration: '25-35 min',
-              type: 'preferred'
-            },
-            {
-              title: `${title} Advanced Techniques`,
-              channel: 'Expert Channel',
-              duration: '20-25 min',
-              type: 'supplementary'
-            }
-          ],
-          sourceLinks: [
-            'https://official-documentation.com',
-            'https://tutorial-guide.com',
-            'https://community-resources.com'
-          ],
-          detailedContent: `This chapter covers the essential concepts and practical applications of ${title}. You will learn fundamental principles, explore real-world use cases, and discover best practices for working with ${title}. By the end of this chapter, you will have a solid foundation to build upon and the ability to apply these concepts to your own projects.`,
-          notes: {
-            mainConcepts: [
-              `Core principle of ${title}`,
-              `Essential frameworks and tools`,
-              `Key methodologies`
+          }
+          
+          // Fetch real YouTube videos for each chapter using enhanced search query
+          console.log(`📺 Fallback Chapter ${i + 1}: Searching YouTube for "${searchQuery}"`);
+          const youtubeVideos = await fetchYouTubeVideos(searchQuery, 3);
+          
+          return {
+            id: i + 1,
+            title: chapterTitle,
+            description: i === 0
+              ? `Learn the basics and fundamentals of ${title}`
+              : i === chapters - 1
+              ? `Explore advanced topics and emerging trends in ${title}`
+              : `Deep dive into intermediate ${title} concepts and applications`,
+            keyPoints: [
+              `Fundamental concepts of ${title}`,
+              `Practical applications and use cases in ${title}`,
+              `Best practices and optimization techniques for ${title}`
             ],
-            commonMistakes: `Common mistakes include overlooking best practices, not considering scalability, and failing to test thoroughly before deployment. Always validate your understanding with peers and document your approach.`,
-            bestPractices: `Follow industry standards, use version control, write clean code, test thoroughly, and maintain documentation. Stay updated with the latest developments in ${title} and participate in community discussions.`
-          },
-          roadmap: `Learning roadmap for ${title}:\n1. Start with fundamentals\n2. Explore practical applications\n3. Study best practices\n4. Complete hands-on projects\n5. Review advanced techniques\n6. Contribute to real-world work`
+            // NEW: Add structured lesson data for ChapterDetail component
+            lessons: [
+              {
+                id: '1.1',
+                topic: `Introduction to ${title}`,
+                learningGoal: `Understand the fundamentals of ${title}`,
+                youtubeVideo: `${title} introduction basics`,
+                resources: `Overview: ${title} Guide`
+              },
+              {
+                id: '1.2',
+                topic: `Core Concepts of ${title}`,
+                learningGoal: `Master the essential concepts`,
+                youtubeVideo: `${title} core concepts explained`,
+                resources: `Study Guide: Key Terms & Definitions`
+              },
+              {
+                id: '1.3',
+                topic: `Practical Application of ${title}`,
+                learningGoal: `Apply concepts to real-world scenarios`,
+                youtubeVideo: `${title} real-world examples and applications`,
+                resources: `Project Template & Code Examples`
+              }
+            ],
+            keyConcepts: [
+              `Foundation of ${title}`,
+              `Core Principles and Theory`,
+              `Practical Implementation`,
+              `Best Practices in ${title}`,
+              `Advanced Techniques`
+            ],
+            learningOutcomes: [
+              `Understand the fundamentals and history of ${title}`,
+              `Apply practical techniques and methods`,
+              `Troubleshoot common issues in ${title}`,
+              `Implement best practices and optimization`
+            ],
+            practicalExercises: [
+              {
+                title: 'Beginner Exercise',
+                description: `Start with basic ${title} concepts`,
+                difficulty: 'beginner'
+              },
+              {
+                title: 'Intermediate Project',
+                description: `Apply ${title} techniques in a practical project`,
+                difficulty: 'intermediate'
+              }
+            ],
+            youtubeVideos: youtubeVideos.length > 0 ? youtubeVideos : [],
+            sourceLinks: [
+              'https://official-documentation.com',
+              'https://tutorial-guide.com',
+              'https://community-resources.com'
+            ],
+            detailedContent: `This chapter covers the essential concepts and practical applications of ${title}. You will learn fundamental principles, explore real-world use cases, and discover best practices for working with ${title}. By the end of this chapter, you will have a solid foundation to build upon and the ability to apply these concepts to your own projects.`,
+            notes: {
+              mainConcepts: [
+                `Core principle of ${title}`,
+                `Essential frameworks and tools`,
+                `Key methodologies`
+              ],
+              commonMistakes: `Common mistakes include overlooking best practices, not considering scalability, and failing to test thoroughly before deployment. Always validate your understanding with peers and document your approach.`,
+              bestPractices: `Follow industry standards, use version control, write clean code, test thoroughly, and maintain documentation. Stay updated with the latest developments in ${title} and participate in community discussions.`
+            },
+            roadmap: `Learning roadmap for ${title}:\n1. Start with fundamentals\n2. Explore practical applications\n3. Study best practices\n4. Complete hands-on projects\n5. Review advanced techniques\n6. Contribute to real-world work`
+          };
         })),
         createdAt: new Date().toISOString(),
         source: 'fallback'
