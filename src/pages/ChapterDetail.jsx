@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ChevronLeft, BookOpen, Play, CheckCircle, Zap, Target, Map, Volume2, ExternalLink, Loader } from 'lucide-react';
+import { ChevronLeft, BookOpen, Play, CheckCircle, Zap, Target, Map, Volume2, ExternalLink, Loader, Check } from 'lucide-react';
 import chapterService from '../lib/chapterService';
+import { markChapterAsDone, unmarkChapterAsDone, getCourseProgress } from '../lib/progressService';
 
 export default function ChapterDetail() {
   const { id: courseId, cid: chapterId } = useParams();
@@ -15,6 +16,8 @@ export default function ChapterDetail() {
   const [detailsError, setDetailsError] = useState(null);
   const [fetchingVideo, setFetchingVideo] = useState(false);
   const [alternativeVideos, setAlternativeVideos] = useState([]);
+  const [isChapterCompleted, setIsChapterCompleted] = useState(false);
+  const [markingProgress, setMarkingProgress] = useState(false);
 
   useEffect(() => {
     const loadCourseData = async () => {
@@ -145,6 +148,42 @@ export default function ChapterDetail() {
     }
   };
 
+  // Check if chapter is completed
+  const checkChapterCompletion = async () => {
+    try {
+      const progress = await getCourseProgress(courseId);
+      const completed = progress.completedChapters?.includes(chapterId);
+      setIsChapterCompleted(completed || false);
+    } catch (error) {
+      console.error('Error checking chapter completion:', error);
+    }
+  };
+
+  // Toggle chapter completion
+  const handleToggleCompletion = async () => {
+    setMarkingProgress(true);
+    try {
+      if (isChapterCompleted) {
+        await unmarkChapterAsDone(courseId, chapterId);
+        setIsChapterCompleted(false);
+      } else {
+        await markChapterAsDone(courseId, chapterId);
+        setIsChapterCompleted(true);
+      }
+    } catch (error) {
+      console.error('Error toggling chapter completion:', error);
+    } finally {
+      setMarkingProgress(false);
+    }
+  };
+
+  // Load completion status when chapter loads
+  useEffect(() => {
+    if (course && chapter) {
+      checkChapterCompletion();
+    }
+  }, [course, chapter, courseId, chapterId]);
+
   if (loading) {
     return (
       <div className="min-h-screen bg-white pt-20 flex items-center justify-center">
@@ -179,19 +218,41 @@ export default function ChapterDetail() {
       {/* Header */}
       <div className="sticky top-16 z-10 bg-white border-b border-slate-200 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <button
-            onClick={() => navigate(`/course/${courseId}`)}
-            className="flex items-center gap-2 mb-3 text-purple-600 hover:text-purple-700 transition font-medium"
-          >
-            <ChevronLeft className="w-5 h-5" />
-            Back to Course
-          </button>
-          <h1 className="text-3xl font-bold text-black">{chapter.title}</h1>
-          <p className="text-slate-600 mt-1">{course.title}</p>
-          <div className="flex gap-3 mt-3 text-sm flex-wrap">
-            <span className="px-3 py-1 bg-purple-100 text-purple-700 rounded-full border border-purple-200 font-medium">Chapter {chapter.id}</span>
-            <span className="px-3 py-1 bg-cyan-100 text-cyan-700 rounded-full border border-cyan-200 font-medium">{course.difficulty}</span>
-            <span className="px-3 py-1 bg-pink-100 text-pink-700 rounded-full border border-pink-200 font-medium">{course.category}</span>
+          <div className="flex items-start justify-between">
+            <div>
+              <button
+                onClick={() => navigate(`/course/${courseId}`)}
+                className="flex items-center gap-2 mb-3 text-purple-600 hover:text-purple-700 transition font-medium"
+              >
+                <ChevronLeft className="w-5 h-5" />
+                Back to Course
+              </button>
+              <h1 className="text-3xl font-bold text-black">{chapter.title}</h1>
+              <p className="text-slate-600 mt-1">{course.title}</p>
+              <div className="flex gap-3 mt-3 text-sm flex-wrap">
+                <span className="px-3 py-1 bg-purple-100 text-purple-700 rounded-full border border-purple-200 font-medium">Chapter {chapter.id}</span>
+                <span className="px-3 py-1 bg-cyan-100 text-cyan-700 rounded-full border border-cyan-200 font-medium">{course.difficulty}</span>
+                <span className="px-3 py-1 bg-pink-100 text-pink-700 rounded-full border border-pink-200 font-medium">{course.category}</span>
+              </div>
+            </div>
+            <button
+              onClick={handleToggleCompletion}
+              disabled={markingProgress}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-semibold transition ${
+                isChapterCompleted
+                  ? 'bg-green-100 text-green-700 hover:bg-green-200'
+                  : 'bg-purple-600 text-white hover:bg-purple-700'
+              } disabled:opacity-50 disabled:cursor-not-allowed mt-2`}
+            >
+              {markingProgress ? (
+                <Loader className="w-4 h-4 animate-spin" />
+              ) : isChapterCompleted ? (
+                <Check className="w-4 h-4" />
+              ) : (
+                <CheckCircle className="w-4 h-4" />
+              )}
+              {markingProgress ? 'Saving...' : isChapterCompleted ? 'Completed' : 'Mark as Done'}
+            </button>
           </div>
         </div>
       </div>
