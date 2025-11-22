@@ -48,7 +48,7 @@ export default function Settings(){
         {/* Header with User Greeting */}
         <div className="mb-8 bg-white rounded-xl shadow-md p-8 border-l-4 border-indigo-600">
           <h1 className="text-4xl font-bold text-slate-900 mb-2">
-            👋 Welcome back, <span className="text-indigo-600">Jane Doe</span>!
+            👋 Welcome back, <span className="text-indigo-600">Pushkar Deshpande</span>!
           </h1>
           <p className="text-slate-600">Manage your account settings and preferences</p>
         </div>

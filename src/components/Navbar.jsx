@@ -45,15 +45,15 @@ export default function Navbar(){
         </div>
       )}
 
-      <header className="flex items-center justify-between px-8 py-4 border-b bg-white dark:bg-slate-900 dark:border-slate-700">
+      <header className="fixed left-60 right-0 top-0 h-20 flex items-center justify-between px-8 py-4 border-b bg-gradient-to-r from-slate-50 via-purple-50 to-pink-50 border-purple-200 z-40 shadow-sm" style={{left: 240, height: 80}}>
         <div className="flex items-center gap-4">
-          <div className="text-lg font-semibold dark:text-white">AI-Powered Learning</div>
-          <div className="text-sm text-slate-500 dark:text-slate-400">Personalized • Gamified • Collaborative</div>
+          <div className="text-lg font-semibold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">AI-Powered Learning</div>
+          <div className="text-sm text-purple-600">Personalized • Gamified • Collaborative</div>
         </div>
         <div className="flex items-center gap-6">
           <input 
             placeholder="Search courses" 
-            className="border rounded-md px-3 py-2 text-sm w-72 dark:bg-slate-800 dark:border-slate-600 dark:text-white" 
+            className="border rounded-md px-3 py-2 text-sm w-72 bg-white border-purple-300 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-200" 
           />
           
           {user && (
@@ -79,6 +79,13 @@ export default function Navbar(){
                     className="w-full text-left px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition"
                   >
                     👤 View Profile
+                  </button>
+
+                  <button
+                    onClick={() => { navigate('/progress'); setShowDropdown(false); }}
+                    className="w-full text-left px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition"
+                  >
+                    📊 Progress
                   </button>
 
                   <button

@@ -84,15 +84,15 @@ const MyLearning = () => {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 pt-20 pb-16">
+    <div className="min-h-screen bg-slate-50 pb-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-12">
           <div className="flex items-center gap-3 mb-4">
             <BookOpen className="w-8 h-8 text-purple-400" />
-            <h1 className="text-4xl font-bold text-purple-600">My Learning</h1>
+            <h1 className="text-4xl font-bold text-black">My Learning</h1>
           </div>
-          <p className="text-purple-600 text-lg">
+          <p className="text-slate-600 text-lg">
             {courses.length === 0 
               ? 'No courses yet. Start learning by generating a new course or exploring available courses.'
               : `You have ${courses.length} course${courses.length !== 1 ? 's' : ''} in your learning path`}

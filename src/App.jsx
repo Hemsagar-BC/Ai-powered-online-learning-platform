@@ -12,6 +12,7 @@ import Settings from './pages/Settings'
 import Onboarding from './pages/Onboarding'
 import StudyTimer from './pages/StudyTimer'
 import Explore from './pages/Explore'
+import Progress from './pages/Progress'
 import Sidebar from './components/Sidebar'
 import Navbar from './components/Navbar'
 
@@ -42,16 +43,17 @@ export default function App(){
           <Route path="/study-timer" element={<StudyTimer/>} />
         </Routes>
       ) : (
-        <div className="min-h-screen flex bg-surface">
+        <>
           <Sidebar />
-          <div className="flex-1">
-            <Navbar />
-            <main className="p-8">
+          <Navbar />
+          <div className="ml-60" style={{marginLeft: 240, marginTop: 80}}>
+            <main className="p-8 overflow-y-auto min-h-screen">
               <Routes>
                 <Route path="/dashboard" element={<Dashboard/>} />
                 <Route path="/my-learning" element={<MyLearning/>} />
                 <Route path="/quiz" element={<Quiz/>} />
                 <Route path="/explore" element={<Explore/>} />
+                <Route path="/progress" element={<Progress/>} />
                 <Route path="/course/:id" element={<CourseOverview/>} />
                 <Route path="/course/:id/chapter/:cid" element={<ChapterDetail/>} />
                 <Route path="/profile" element={<Profile/>} />
@@ -61,7 +63,7 @@ export default function App(){
               </Routes>
             </main>
           </div>
-        </div>
+        </>
       )}
     </>
   )

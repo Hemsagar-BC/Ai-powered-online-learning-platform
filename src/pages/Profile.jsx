@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useAuth } from '../contexts/AuthContext'
+import { getAllUserProgress } from '../lib/progressService'
 
 export default function Profile(){
   const { user } = useAuth()
@@ -10,13 +11,46 @@ export default function Profile(){
     streak: 0,
     xp: 0
   })
+  const [allCourses, setAllCourses] = useState([])
+  const [userProgress, setUserProgress] = useState({})
 
   useEffect(() => {
-    // Load user stats from localStorage or backend
-    const savedStats = localStorage.getItem('codeflux_user_stats')
-    if (savedStats) {
-      setStats(JSON.parse(savedStats))
+    // Load courses and calculate real stats from progress
+    const loadStats = async () => {
+      try {
+        // Load all courses
+        let courses = JSON.parse(localStorage.getItem('generatedCourses') || '[]')
+        if (courses.length === 0) {
+          courses = JSON.parse(localStorage.getItem('codeflux_courses') || '[]')
+        }
+        setAllCourses(courses)
+
+        // Load real progress data
+        const progressData = await getAllUserProgress()
+        setUserProgress(progressData)
+
+        // Calculate stats from real data
+        const totalCourses = courses.length
+        const totalChapters = courses.reduce((sum, c) => sum + (c.chapters?.length || 0), 0)
+        const completedChapters = Object.values(progressData).reduce((sum, p) => sum + (p.completedChapters?.length || 0), 0)
+        
+        setStats({
+          totalCourses: totalCourses,
+          completed: completedChapters,
+          inProgress: Math.max(0, totalCourses - 0), // Shows active courses
+          streak: 0, // Will be calculated if needed
+          xp: 0 // Will be calculated if needed
+        })
+      } catch (error) {
+        console.error('Error loading stats:', error)
+      }
     }
+
+    loadStats()
+
+    // Poll for updates every 1 second to match Progress page
+    const interval = setInterval(loadStats, 1000)
+    return () => clearInterval(interval)
   }, [user])
 
   // Get initials for large avatar
@@ -38,26 +72,26 @@ export default function Profile(){
   const formattedDate = memberSinceDate.toLocaleDateString('en-US', { year: 'numeric', month: 'short' })
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 pt-20 pb-16">
+    <div className="min-h-screen bg-white pt-20 pb-16">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Profile Header */}
-        <div className="flex items-center gap-6 mb-8 p-8 bg-gradient-to-r from-purple-600/20 to-pink-600/20 border border-purple-500/20 rounded-lg backdrop-blur-sm">
-          <div className={`w-32 h-32 rounded-full flex items-center justify-center text-white font-bold text-4xl ${getAvatarColor()} shadow-lg ring-2 ring-purple-400/30`}>
+        <div className="flex items-center gap-6 mb-8 p-8 bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-all">
+          <div className={`w-32 h-32 rounded-full flex items-center justify-center text-white font-bold text-4xl ${getAvatarColor()} shadow-lg ring-2 ring-gray-200`}>
             {getInitials()}
           </div>
           <div className="flex-1">
-            <h2 className="text-3xl font-bold text-white">{user?.displayName || 'CodeFlux User'}</h2>
-            <div className="text-slate-300 mt-1">
+            <h2 className="text-3xl font-bold text-gray-900">{user?.displayName || 'CodeFlux User'}</h2>
+            <div className="text-gray-600 mt-1">
               📧 {user?.email || 'user@codeflux.dev'}
             </div>
-            <div className="text-sm text-slate-400 mt-2">
+            <div className="text-sm text-gray-500 mt-2">
               ✅ Member since {formattedDate}
             </div>
             <div className="flex gap-4 mt-4 flex-wrap">
-              <span className="px-3 py-1 bg-green-500/20 text-green-300 rounded-full text-sm font-semibold border border-green-500/30">
+              <span className="px-3 py-1 bg-green-50 text-green-700 rounded-full text-sm font-semibold border border-green-200">
                 ✓ Verified User
               </span>
-              <span className="px-3 py-1 bg-blue-500/20 text-blue-300 rounded-full text-sm font-semibold border border-blue-500/30">
+              <span className="px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-sm font-semibold border border-blue-200">
                 🔗 Google Sign-In
               </span>
             </div>
