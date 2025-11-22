@@ -79,9 +79,13 @@ export default function CreateCourseModal({onClose, isGuest}){
 
         showNotification('✅ Course generated successfully!', 'success')
         
-        // Navigate to the generated course
+        // Navigate directly to the first chapter
+        const firstChapterId = fullCourse.chapters && fullCourse.chapters.length > 0 
+          ? fullCourse.chapters[0].id || 1
+          : 1
+          
         setTimeout(() => {
-          navigate(`/course/${courseId}`)
+          navigate(`/course/${courseId}/chapter/${firstChapterId}`)
           setOpen(false)
           if(onClose) onClose()
         }, 1500)

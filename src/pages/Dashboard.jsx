@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { FolderOpen } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { useStreak } from '../contexts/StreakContext'
 import { signInWithGoogle } from '../lib/firebase'
@@ -9,11 +10,14 @@ import { formatDateForDb, getRelativeDate } from '../lib/dateUtils'
 import CreateCourseModal from '../components/CreateCourseModal'
 import StreakWidget from '../components/StreakWidget'
 import { getContinueLearningCourses } from '../lib/firebaseCoursesService'
+import { useStudyTimer, formatStudyTime } from '../lib/studyTimerService'
+import { getAllUserProgress } from '../lib/progressService'
 
 export default function Dashboard(){
   const navigate = useNavigate()
   const { user, loading } = useAuth()
   const { streak } = useStreak()
+  const { todayStudyTime, isTracking } = useStudyTimer()
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [showSignInPrompt, setShowSignInPrompt] = useState(false)
   const [isGuestMode, setIsGuestMode] = useState(false)
@@ -24,6 +28,8 @@ export default function Dashboard(){
   const [loadingStats, setLoadingStats] = useState(false)
   const [courses, setCourses] = useState([])
   const [loadingCourses, setLoadingCourses] = useState(false)
+  const [userProgress, setUserProgress] = useState({})
+  const [allCourses, setAllCourses] = useState([])
 
   // Fetch user stats
   useEffect(() => {
@@ -68,6 +74,30 @@ export default function Dashboard(){
 
     fetchStats()
   }, [user?.uid])
+
+  // Load progress data
+  useEffect(() => {
+    const loadProgress = async () => {
+      try {
+        let allCoursesData = JSON.parse(localStorage.getItem('generatedCourses') || '[]')
+        if (allCoursesData.length === 0) {
+          allCoursesData = JSON.parse(localStorage.getItem('codeflux_courses') || '[]')
+        }
+        setAllCourses(allCoursesData)
+        
+        const progressData = await getAllUserProgress()
+        setUserProgress(progressData)
+      } catch (error) {
+        console.error('Error loading progress:', error)
+        setUserProgress({})
+      }
+    }
+
+    const interval = setInterval(loadProgress, 1000)
+    loadProgress()
+    
+    return () => clearInterval(interval)
+  }, [])
 
   // Load courses from Firebase
   useEffect(() => {
@@ -253,53 +283,93 @@ export default function Dashboard(){
         </div>
       )}
 
-      {/* Stats Section */}
-      <section className="grid grid-cols-5 gap-6 mb-8">
-        <StreakWidget />
-        <div className="card">
-          <h3 className="text-sm text-slate-500">Today's Study</h3>
-          <div className="mt-3 text-2xl font-semibold flex items-center gap-2">
-            <span>⏱️</span>
-            <span>{Math.floor(todaysSessions / 60)}h {todaysSessions % 60}m</span>
+      {/* Your Progress */}
+      <section className="mb-8">
+        <div className="card bg-gradient-to-br from-purple-50 to-pink-50 border border-purple-200">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-lg font-semibold text-purple-900">Your Progress</h3>
+            <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-purple-200">
+              <span className="text-xs font-semibold text-purple-700">Completion</span>
+            </span>
           </div>
-        </div>
-        <div className="card">
-          <h3 className="text-sm text-slate-500">This Week</h3>
-          <div className="mt-3 text-2xl font-semibold flex items-center gap-2">
-            <span>📅</span>
-            <span>{weekSessions} min</span>
-          </div>
-        </div>
-        <div className="card">
-          <h3 className="text-sm text-slate-500">Total Sessions</h3>
-          <div className="mt-3 text-2xl font-semibold flex items-center gap-2">
-            <span>📊</span>
-            <span>{recentSessions.length}</span>
+          <div className="space-y-4">
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm text-purple-700 font-medium">Chapters Completed</span>
+                <span className="font-semibold text-purple-900">
+                  {Object.values(userProgress).reduce((sum, p) => sum + (p.completedChapters?.length || 0), 0)}/{allCourses.reduce((sum, c) => sum + (c.chapters?.length || 0), 0)}
+                </span>
+              </div>
+              <div className="w-full bg-purple-200 rounded-full h-3">
+                <div 
+                  className="bg-gradient-to-r from-purple-600 to-pink-600 h-3 rounded-full transition-all duration-500" 
+                  style={{ 
+                    width: allCourses.reduce((sum, c) => sum + (c.chapters?.length || 0), 0) > 0 
+                      ? `${Math.round((Object.values(userProgress).reduce((sum, p) => sum + (p.completedChapters?.length || 0), 0) / allCourses.reduce((sum, c) => sum + (c.chapters?.length || 0), 0)) * 100)}%`
+                      : '0%'
+                  }}
+                ></div>
+              </div>
+            </div>
+            <div className="grid grid-cols-3 gap-3 pt-2">
+              <div className="text-center bg-white rounded-lg p-3 border border-purple-200">
+                <p className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                  {Object.keys(userProgress).length}
+                </p>
+                <p className="text-xs text-purple-700 font-medium">Courses</p>
+              </div>
+              <div className="text-center bg-white rounded-lg p-3 border border-purple-200">
+                <p className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                  {Object.values(userProgress).reduce((sum, p) => sum + (p.completedChapters?.length || 0), 0)}
+                </p>
+                <p className="text-xs text-purple-700 font-medium">Chapters Done</p>
+              </div>
+              <div className="text-center bg-white rounded-lg p-3 border border-purple-200">
+                <p className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                  {allCourses.reduce((sum, c) => sum + (c.chapters?.length || 0), 0) > 0 
+                    ? Math.round((Object.values(userProgress).reduce((sum, p) => sum + (p.completedChapters?.length || 0), 0) / allCourses.reduce((sum, c) => sum + (c.chapters?.length || 0), 0)) * 100)
+                    : 0
+                  }%
+                </p>
+                <p className="text-xs text-purple-700 font-medium">Complete</p>
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Recent Sessions */}
-      {recentSessions.length > 0 && (
-        <section className="mb-8">
-          <h2 className="text-xl font-semibold mb-4">Recent Study Sessions</h2>
-          <div className="card">
-            <div className="space-y-2">
-              {recentSessions.map(session => (
-                <div key={session.id} className="flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg">
-                  <div>
-                    <p className="font-medium text-gray-900">{session.subject || 'General'}</p>
-                    <p className="text-sm text-gray-500">{getRelativeDate(session.date)}</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-semibold text-gray-900">{session.duration} min</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
+      {/* Quick Actions */}
+      <section className="mb-8">
+        <h2 className="text-xl font-semibold mb-4">Quick Actions</h2>
+        <div className="grid grid-cols-3 gap-6">
+          <button 
+            onClick={handleCreateCourse}
+            className="card p-6 text-center hover:shadow-lg transition-shadow cursor-pointer group bg-gradient-to-br from-purple-50 to-pink-50 border border-purple-200 hover:border-purple-400"
+          >
+            <div className="text-4xl mb-3 group-hover:scale-110 transition-transform">📚</div>
+            <h3 className="font-semibold text-purple-900 mb-2">Learn New Course</h3>
+            <p className="text-sm text-purple-700">Start a new learning journey</p>
+          </button>
+
+          <button 
+            onClick={() => navigate('/quiz')}
+            className="card p-6 text-center hover:shadow-lg transition-shadow cursor-pointer group bg-gradient-to-br from-purple-50 to-pink-50 border border-purple-200 hover:border-purple-400"
+          >
+            <div className="text-4xl mb-3 group-hover:scale-110 transition-transform">✏️</div>
+            <h3 className="font-semibold text-purple-900 mb-2">Take a Quiz</h3>
+            <p className="text-sm text-purple-700">Test your knowledge</p>
+          </button>
+
+          <button 
+            onClick={() => navigate('/community')}
+            className="card p-6 text-center hover:shadow-lg transition-shadow cursor-pointer group bg-gradient-to-br from-purple-50 to-pink-50 border border-purple-200 hover:border-purple-400"
+          >
+            <div className="text-4xl mb-3 group-hover:scale-110 transition-transform">👥</div>
+            <h3 className="font-semibold text-purple-900 mb-2">Join Community</h3>
+            <p className="text-sm text-purple-700">Connect with other learners</p>
+          </button>
+        </div>
+      </section>
 
       {/* Continue Learning */}
       <section className="mb-8">
@@ -319,17 +389,25 @@ export default function Dashboard(){
             {courses.map(course => (
               <div 
                 key={course.id} 
-                className="w-64 card shrink-0 cursor-pointer hover:shadow-lg transition-shadow"
+                className="w-64 card shrink-0 cursor-pointer hover:shadow-xl transition-all hover:scale-105"
                 onClick={() => navigate(`/course/${course.id}`)}
               >
-                <div className="h-32 bg-gradient-to-r from-primary-500 to-primary-600 rounded-md mb-4"></div>
+                <div className="h-32 bg-gradient-to-br from-purple-600 via-pink-500 to-purple-700 rounded-lg mb-4 flex items-center justify-center relative overflow-hidden">
+                  {/* Animated background elements */}
+                  <div className="absolute inset-0 opacity-30">
+                    <div className="absolute top-2 right-2 w-16 h-16 bg-white rounded-full opacity-20"></div>
+                    <div className="absolute bottom-3 left-3 w-12 h-12 bg-white rounded-full opacity-15"></div>
+                  </div>
+                  {/* Folder Icon */}
+                  <FolderOpen className="w-16 h-16 text-white drop-shadow-lg relative z-10" />
+                </div>
                 <h3 className="font-semibold text-gray-900 truncate">{course.title}</h3>
                 <div className="mt-2 text-sm text-slate-500">
                   Chapter {course.currentChapter || 1} of {course.totalChapters || 0}
                 </div>
                 <div className="mt-3 w-full bg-gray-200 rounded-full h-2">
                   <div 
-                    className="bg-primary-500 h-2 rounded-full"
+                    className="bg-gradient-to-r from-purple-600 to-pink-500 h-2 rounded-full transition-all"
                     style={{ width: `${course.progress || 0}%` }}
                   />
                 </div>

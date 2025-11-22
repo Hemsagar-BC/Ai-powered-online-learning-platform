@@ -326,69 +326,76 @@ export default function Explore() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto">
-      <div className="mb-8">
-        <h1 className="text-4xl font-bold text-slate-900 mb-2">Explore Courses</h1>
-        <p className="text-slate-600">Discover pre-curated courses to enhance your learning journey</p>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {preGeneratedCourses.map(course => (
-          <div key={course.id} className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow">
-            {/* Course Header */}
-            <div className="h-40 bg-gradient-to-br from-primary-500 to-primary-600 p-6 flex flex-col justify-end text-white">
-              <h2 className="text-2xl font-bold">{course.title}</h2>
-            </div>
-
-            {/* Course Body */}
-            <div className="p-6">
-              <p className="text-slate-600 text-sm mb-4">{course.description}</p>
-
-              {/* Course Meta */}
-              <div className="flex items-center justify-between mb-6 pb-6 border-b border-gray-200">
-                <div>
-                  <span className="inline-block px-3 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded-full mr-2">
-                    {course.category}
-                  </span>
-                  <span className="inline-block px-3 py-1 bg-green-100 text-green-700 text-xs font-medium rounded-full">
-                    {course.difficulty}
-                  </span>
-                </div>
-              </div>
-
-              {/* Course Stats */}
-              <div className="grid grid-cols-2 gap-4 mb-6">
-                <div>
-                  <p className="text-2xl font-bold text-slate-900">{course.chapters.length}</p>
-                  <p className="text-xs text-slate-500">Chapters</p>
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-slate-900">
-                    {course.chapters.reduce((sum, ch) => sum + (ch.lessons?.length || 0), 0)}
-                  </p>
-                  <p className="text-xs text-slate-500">Lessons</p>
-                </div>
-              </div>
-
-              {/* Enroll Button */}
-              <button
-                onClick={() => handleEnrollCourse(course)}
-                disabled={loading}
-                className="w-full bg-primary-600 text-white py-3 rounded-lg hover:bg-primary-700 transition font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {loading ? 'Enrolling...' : 'Enroll Course'}
-              </button>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Empty State */}
-      {preGeneratedCourses.length === 0 && (
-        <div className="text-center py-12">
-          <p className="text-slate-500 text-lg">No courses available yet</p>
+    <div className="min-h-screen bg-white pt-20 pb-16">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Header */}
+        <div className="mb-12">
+          <h1 className="text-4xl font-bold text-black mb-2">Explore Courses</h1>
+          <p className="text-slate-600 text-lg">Discover pre-curated courses to enhance your learning journey</p>
         </div>
-      )}
+
+        {/* Courses Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {preGeneratedCourses.map(course => (
+            <div 
+              key={course.id} 
+              className="group bg-gradient-to-br from-slate-800 to-slate-700 rounded-lg overflow-hidden border border-purple-500/20 hover:border-purple-400/40 transition-all duration-300 hover:shadow-xl hover:shadow-purple-500/10"
+            >
+              {/* Course Header */}
+              <div className="h-40 bg-gradient-to-br from-purple-600 to-pink-600 p-6 flex flex-col justify-end">
+                <h2 className="text-2xl font-bold text-white group-hover:text-purple-200 transition-colors">{course.title}</h2>
+              </div>
+
+              {/* Course Body */}
+              <div className="p-6">
+                <p className="text-slate-400 text-sm mb-4 line-clamp-3">{course.description}</p>
+
+                {/* Course Meta */}
+                <div className="flex items-center justify-between mb-6 pb-6 border-b border-slate-700">
+                  <div className="flex gap-2 flex-wrap">
+                    <span className="inline-block px-3 py-1 bg-purple-500/20 text-purple-300 text-xs font-medium rounded-full border border-purple-500/30">
+                      {course.category}
+                    </span>
+                    <span className="inline-block px-3 py-1 bg-cyan-500/20 text-cyan-300 text-xs font-medium rounded-full border border-cyan-500/30">
+                      {course.difficulty}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Course Stats */}
+                <div className="grid grid-cols-2 gap-4 mb-6">
+                  <div className="bg-slate-700/50 rounded-lg p-3 text-center">
+                    <p className="text-2xl font-bold text-purple-400">{course.chapters.length}</p>
+                    <p className="text-xs text-slate-400">Chapters</p>
+                  </div>
+                  <div className="bg-slate-700/50 rounded-lg p-3 text-center">
+                    <p className="text-2xl font-bold text-cyan-400">
+                      {course.chapters.reduce((sum, ch) => sum + (ch.lessons?.length || 0), 0)}
+                    </p>
+                    <p className="text-xs text-slate-400">Lessons</p>
+                  </div>
+                </div>
+
+                {/* Enroll Button */}
+                <button
+                  onClick={() => handleEnrollCourse(course)}
+                  disabled={loading}
+                  className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white py-3 rounded-lg transition-all duration-300 font-semibold disabled:opacity-50 disabled:cursor-not-allowed group-hover:shadow-lg group-hover:shadow-purple-500/50"
+                >
+                  {loading ? 'Enrolling...' : 'Enroll Course'}
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Empty State */}
+        {preGeneratedCourses.length === 0 && (
+          <div className="text-center py-12 bg-slate-800/50 rounded-lg border border-slate-700">
+            <p className="text-slate-400 text-lg">No courses available yet</p>
+          </div>
+        )}
+      </div>
     </div>
   )
 }

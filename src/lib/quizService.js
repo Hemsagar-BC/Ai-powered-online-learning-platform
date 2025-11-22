@@ -1,6 +1,101 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY);
+const API_KEY = 'AIzaSyCMaWtCetfV4X9GnMZVIldZepgZG34xFvY'
+const genAI = new GoogleGenerativeAI(API_KEY);
+
+/**
+ * Generate fallback quiz questions when API quota is exceeded
+ * @param {Object} course - The course object
+ * @returns {Array} - Array of 12 MCQ questions
+ */
+const generateFallbackQuestions = (course) => {
+  return [
+    {
+      "id": 1,
+      "question": `What is the primary focus of ${course.title}?`,
+      "options": [`Learn ${course.title}`, "Understand basics", "Master advanced concepts", "Practice exercises"],
+      "correctAnswer": 0,
+      "explanation": `This course is primarily focused on teaching ${course.title} comprehensively.`
+    },
+    {
+      "id": 2,
+      "question": "Which of the following is a key concept in this course?",
+      "options": ["Theory", "Practice", "Integration", "All of the above"],
+      "correctAnswer": 3,
+      "explanation": "This course covers theory, practical exercises, and integration aspects."
+    },
+    {
+      "id": 3,
+      "question": "What is the best way to learn this course?",
+      "options": ["Reading only", "Practice actively", "Memorization", "Videos only"],
+      "correctAnswer": 1,
+      "explanation": "Active practice and engagement are the best ways to learn effectively."
+    },
+    {
+      "id": 4,
+      "question": "How often should you practice to master this course?",
+      "options": ["Once a week", "Occasionally", "Regularly and consistently", "Never needed"],
+      "correctAnswer": 2,
+      "explanation": "Consistent and regular practice leads to mastery of any skill."
+    },
+    {
+      "id": 5,
+      "question": "What is the importance of understanding fundamentals?",
+      "options": ["Not important", "Somewhat important", "Very important", "Optional"],
+      "correctAnswer": 2,
+      "explanation": "Understanding fundamentals is crucial for building advanced skills."
+    },
+    {
+      "id": 6,
+      "question": "Which learning method is most effective?",
+      "options": ["Passive reading", "Active participation", "Memorization", "Guessing"],
+      "correctAnswer": 1,
+      "explanation": "Active participation and engagement lead to better learning outcomes."
+    },
+    {
+      "id": 7,
+      "question": "How can you apply what you learn?",
+      "options": ["Keep it theoretical", "Apply in real projects", "Don't apply", "Share with others only"],
+      "correctAnswer": 1,
+      "explanation": "Applying knowledge in real-world projects solidifies your understanding."
+    },
+    {
+      "id": 8,
+      "question": "What should you do when stuck?",
+      "options": ["Give up", "Ask for help", "Skip the topic", "Guess"],
+      "correctAnswer": 1,
+      "explanation": "Seeking help and guidance when stuck is a sign of good learning practice."
+    },
+    {
+      "id": 9,
+      "question": "How important is repetition in learning?",
+      "options": ["Not important", "Somewhat important", "Very important", "Counterproductive"],
+      "correctAnswer": 2,
+      "explanation": "Repetition is key to reinforcing knowledge and building muscle memory."
+    },
+    {
+      "id": 10,
+      "question": "What is the goal of completing this course?",
+      "options": ["Just a certificate", "Mastering skills", "Passing time", "No specific goal"],
+      "correctAnswer": 1,
+      "explanation": "The primary goal should be mastering the skills and knowledge presented."
+    },
+    {
+      "id": 11,
+      "question": "How should you pace your learning?",
+      "options": ["As fast as possible", "As slow as possible", "At a comfortable sustainable pace", "Randomly"],
+      "correctAnswer": 2,
+      "explanation": "Learning at a sustainable pace ensures better retention and understanding."
+    },
+    {
+      "id": 12,
+      "question": "What comes after completing this course?",
+      "options": ["Stop learning", "Apply and practice", "Teach others", "Both B and C"],
+      "correctAnswer": 3,
+      "explanation": "After learning, you should practice what you learned and share knowledge with others."
+    }
+  ];
+};
 
 /**
  * Generate quiz questions dynamically based on course content
@@ -84,6 +179,19 @@ Return ONLY valid JSON array, no markdown, no code blocks.`;
     return questions;
   } catch (error) {
     console.error('Error generating quiz questions:', error);
+    
+    // Check if it's a quota error
+    if (error?.message?.includes('429') || error?.message?.includes('quota') || error?.message?.includes('Quota exceeded')) {
+      console.warn('⚠️ Gemini API quota exceeded. Using fallback questions.');
+      return generateFallbackQuestions(course);
+    }
+    
+    // For other errors, also use fallback
+    if (error?.message?.includes('Invalid quiz format') || error?.message?.includes('Expected 12 questions')) {
+      console.warn('⚠️ Could not parse Gemini response. Using fallback questions.');
+      return generateFallbackQuestions(course);
+    }
+    
     throw error;
   }
 };

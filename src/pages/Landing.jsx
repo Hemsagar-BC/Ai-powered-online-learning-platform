@@ -1,5 +1,17 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import {
+  GraduationCap,
+  BookOpen,
+  Sparkles,
+  Trophy,
+  Zap,
+  Users,
+  BarChart3,
+  MessageCircle,
+  Sun,
+  Moon
+} from 'lucide-react'
 
 export default function Landing(){
   const navigate = useNavigate()
@@ -21,33 +33,26 @@ export default function Landing(){
     localStorage.setItem('codeflux-theme', !isDark ? 'dark' : 'light')
   }
 
-  const bgColor = isDark ? 'bg-slate-900' : 'bg-white'
-  const navBg = isDark ? 'bg-slate-800 border-b border-slate-700' : 'bg-white'
-  const heroBg = isDark ? 'bg-gradient-to-br from-slate-800 via-slate-900 to-slate-800' : 'bg-gradient-to-br from-indigo-50 via-white to-purple-50'
-  const sectionBg = isDark ? 'bg-slate-800' : 'bg-white'
-  const sectionBgAlt = isDark ? 'bg-slate-700' : 'bg-slate-50'
-  const textPrimary = isDark ? 'text-white' : 'text-slate-900'
-  const textSecondary = isDark ? 'text-slate-400' : 'text-slate-600'
-  const textTertiary = isDark ? 'text-slate-500' : 'text-slate-500'
-  const borderColor = isDark ? 'border-slate-700' : 'border-slate-200'
-  const cardBg = isDark ? 'bg-slate-700 hover:shadow-lg hover:shadow-indigo-500/20' : 'bg-slate-50 hover:shadow-lg'
-
   return (
-    <div className={`transition-colors duration-300 ${bgColor}`}>
+    <div className={`transition-colors duration-300 ${isDark ? 'bg-slate-900' : 'bg-white'}`}>
       {/* Navigation Header */}
-      <nav className={`fixed top-0 w-full shadow-md z-40 transition-colors duration-300 ${navBg}`}>
+      <nav className={`sticky top-0 z-40 backdrop-blur-lg border-b transition-colors duration-300 ${
+        isDark 
+          ? 'bg-slate-950/80 border-purple-800/30' 
+          : 'bg-white/80 border-gray-200'
+      }`}>
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className={`text-3xl font-bold ${isDark ? 'text-indigo-400' : 'text-indigo-600'}`}>CodeFlux</div>
+          <div className={`text-3xl font-bold ${isDark ? 'text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400' : 'bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent'}`}>CodeFlux</div>
           <div className="flex items-center gap-4">
             <button 
               onClick={toggleTheme}
-              className={`px-4 py-2 rounded-lg transition font-semibold flex items-center gap-2 ${isDark ? 'bg-slate-600 text-slate-100 hover:bg-slate-500' : 'bg-slate-100 text-slate-900 hover:bg-slate-200'}`}
+              className={`p-2 rounded-lg transition-colors ${isDark ? 'bg-slate-800 text-yellow-300 hover:bg-slate-700' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
             >
-              {isDark ? '☀️ Light' : '🌙 Dark'}
+              {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
             </button>
             <button 
               onClick={() => navigate('/dashboard')}
-              className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition font-semibold"
+              className="px-6 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg hover:from-purple-700 hover:to-pink-700 transition font-semibold"
             >
               Get Started
             </button>
@@ -56,161 +61,287 @@ export default function Landing(){
       </nav>
 
       {/* Hero Section */}
-      <section className={`pt-32 pb-20 transition-colors duration-300 ${heroBg}`}>
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            {/* Left: Content */}
-            <div>
-              <h1 className={`text-6xl font-bold mb-6 leading-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                Learn Smarter,<br/>
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600">
-                  Create Faster
-                </span>
-              </h1>
-              <p className={`text-xl mb-8 ${textSecondary}`}>
-                CodeFlux is an AI-powered learning platform where anyone can create and share courses instantly. 
-                No fees, no limits—just pure learning powered by artificial intelligence.
-              </p>
-              <div className="flex gap-4">
-                <button 
-                  onClick={() => navigate('/dashboard')}
-                  className="px-8 py-4 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition font-semibold text-lg"
-                >
-                  Get Started
-                </button>
-                <button 
-                  onClick={() => {
-                    document.getElementById('features-section').scrollIntoView({ behavior: 'smooth' });
-                  }}
-                  className={`px-8 py-4 border-2 rounded-lg transition font-semibold text-lg ${isDark ? 'border-slate-600 text-slate-300 hover:border-slate-500' : 'border-slate-300 text-slate-900 hover:border-slate-400'}`}
-                >
-                  Explore Features
-                </button>
-              </div>
+      <section className={`relative min-h-screen overflow-hidden pt-20 pb-20 transition-colors duration-300 ${
+        isDark
+          ? 'bg-gradient-to-b from-slate-950 via-purple-900/20 to-slate-900'
+          : 'bg-gradient-to-br from-purple-50 via-pink-50 to-indigo-50'
+      }`}>
+        {/* Background decorative elements */}
+        {!isDark && (
+          <>
+            <div className="absolute top-20 right-10 w-72 h-72 bg-purple-200 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse" />
+            <div className="absolute top-40 left-10 w-72 h-72 bg-pink-200 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse" style={{animationDelay: '2s'}} />
+            <div className="absolute -bottom-8 left-20 w-72 h-72 bg-indigo-200 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse" style={{animationDelay: '4s'}} />
+          </>
+        )}
 
-              {/* Stats - REMOVED as per request */}
+        {isDark && (
+          <>
+            <div className="absolute top-20 right-10 w-72 h-72 bg-purple-600 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-pulse" />
+            <div className="absolute top-40 left-10 w-72 h-72 bg-pink-600 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-pulse" style={{animationDelay: '2s'}} />
+            <div className="absolute -bottom-8 left-20 w-72 h-72 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-pulse" style={{animationDelay: '4s'}} />
+          </>
+        )}
+
+        <div className="relative max-w-7xl mx-auto px-6 grid md:grid-cols-2 gap-12 items-center min-h-[80vh]">
+          {/* LEFT COLUMN */}
+          <div className="flex flex-col justify-center">
+            {/* Badge */}
+            <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full mb-6 w-fit ${
+              isDark
+                ? 'bg-purple-900/40 border border-purple-700/50'
+                : 'bg-purple-100 border border-purple-200'
+            }`}>
+              <Sparkles className={`w-4 h-4 ${isDark ? 'text-purple-300' : 'text-purple-600'}`} />
+              <span className={`text-sm font-semibold ${isDark ? 'text-purple-300' : 'text-purple-700'}`}>
+                Powered by AI Technology
+              </span>
             </div>
 
-            {/* Right: Visual */}
-            <div className="relative">
-              <div className="bg-gradient-to-br from-indigo-600 to-purple-600 rounded-2xl p-8 text-white shadow-2xl">
-                <div className="space-y-4">
-                  <div className="text-5xl">📚</div>
-                  <h3 className="text-2xl font-bold">AI-Powered Learning</h3>
-                  <p className="text-indigo-100">Generate complete courses in minutes with our cutting-edge AI technology</p>
-                  <div className="pt-4 border-t border-indigo-400">
-                    <p className="text-sm text-indigo-100">✓ Auto-generated curriculum</p>
-                    <p className="text-sm text-indigo-100">✓ Video explanations</p>
-                    <p className="text-sm text-indigo-100">✓ Interactive quizzes</p>
-                  </div>
-                </div>
-              </div>
-              <div className="absolute -bottom-6 -right-6 w-32 h-32 bg-yellow-300 rounded-full opacity-20"></div>
-              <div className="absolute -top-6 -left-6 w-40 h-40 bg-purple-300 rounded-full opacity-20"></div>
+            {/* Main Heading */}
+            <h1 className={`text-6xl md:text-7xl font-black mb-6 leading-tight ${
+              isDark ? 'text-white' : 'text-slate-900'
+            }`}>
+              <span className="bg-gradient-to-r from-purple-400 via-pink-400 to-red-400 bg-clip-text text-transparent">
+                Learn Smarter,
+              </span>
+              <br />
+              <span className="bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+                Grow Faster
+              </span>
+            </h1>
+
+            {/* Tagline */}
+            <p className={`text-2xl font-bold mb-4 ${isDark ? 'text-purple-300' : 'text-purple-600'}`}>
+              ✨ The Future of Personalized Learning is Here
+            </p>
+
+            {/* Subtitle */}
+            <p className={`text-lg mb-8 max-w-xl leading-relaxed ${
+              isDark ? 'text-gray-300' : 'text-gray-600'
+            }`}>
+              Create AI-powered courses, ace gamified challenges, connect with a vibrant community, and get instant help from your personal AI study buddy. Your learning journey starts here.
+            </p>
+
+            {/* Action Buttons */}
+            <div className="flex flex-col sm:flex-row gap-4 mb-8">
+              <button
+                onClick={() => navigate('/dashboard')}
+                className={`flex-1 px-8 py-4 rounded-xl font-semibold transition-all duration-300 flex items-center justify-center gap-2 ${
+                  isDark
+                    ? 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white'
+                    : 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white'
+                } hover:scale-105 shadow-lg`}
+              >
+                🚀 Get Started
+              </button>
+              
+              <button
+                onClick={() => {
+                  document.getElementById('features-section')?.scrollIntoView({ behavior: 'smooth' })
+                }}
+                className={`flex-1 px-8 py-4 rounded-xl font-semibold transition-all duration-300 border-2 ${
+                  isDark
+                    ? 'border-purple-400/50 text-purple-300 hover:border-purple-300 hover:bg-purple-900/20'
+                    : 'border-purple-600 text-purple-600 hover:border-purple-700 hover:bg-purple-50 bg-white'
+                } hover:scale-105`}
+              >
+                📚 Explore Features
+              </button>
+            </div>
+          </div>
+
+          {/* RIGHT COLUMN - Illustration */}
+          <div className="relative hidden md:flex items-center justify-center h-full">
+            <div className="absolute top-20 left-1/4 animate-bounce" style={{ animationDelay: '0s' }}>
+              <GraduationCap className={`w-32 h-32 ${isDark ? 'text-purple-400' : 'text-purple-600'} opacity-80`} />
+            </div>
+
+            <div className="absolute top-1/3 right-10 animate-bounce" style={{ animationDelay: '0.2s' }}>
+              <BookOpen className={`w-24 h-24 ${isDark ? 'text-pink-400' : 'text-pink-600'} opacity-60`} />
+            </div>
+
+            <div className="absolute bottom-1/3 left-1/4 animate-pulse">
+              <Sparkles className="w-16 h-16 text-yellow-400 opacity-70" />
+            </div>
+
+            <div className="absolute bottom-20 right-1/4 animate-bounce" style={{ animationDelay: '0.4s' }}>
+              <Trophy className="w-20 h-20 text-amber-400 opacity-60" />
+            </div>
+
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className={`w-80 h-80 rounded-full blur-3xl ${
+                isDark
+                  ? 'bg-gradient-to-r from-purple-600/20 to-pink-600/20'
+                  : 'bg-gradient-to-r from-purple-400/20 to-pink-400/20'
+              }`} />
             </div>
           </div>
         </div>
       </section>
 
       {/* Features Section */}
-      <section id="features-section" className={`py-20 transition-colors duration-300 ${sectionBg}`}>
+      <section id="features-section" className={`py-20 transition-colors duration-300 ${
+        isDark
+          ? 'bg-slate-900/50 border-t border-purple-800/30'
+          : 'bg-gradient-to-br from-purple-50 via-pink-50 to-indigo-50'
+      }`}>
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-16">
-            <h2 className={`text-4xl font-bold mb-4 ${textPrimary}`}>Why Choose CodeFlux?</h2>
-            <p className={`text-xl ${textSecondary}`}>Everything you need to learn and create amazing courses</p>
+            <h2 className={`text-5xl font-bold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+              Why Choose CodeFlux?
+            </h2>
+            <p className={`text-xl max-w-2xl mx-auto ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+              Experience revolutionary features designed to transform your learning experience
+            </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {[
-              {
-                icon: '⚡',
-                title: 'Lightning Fast Course Creation',
-                description: 'Just describe your course topic, duration, and difficulty. Our AI generates a complete curriculum with videos and content in seconds.'
-              },
-              {
-                icon: '🎓',
-                title: 'Learn for Completely Free',
-                description: 'No subscriptions, no hidden fees. All courses are free forever. Learn at your own pace with lifetime access.'
-              },
-              {
-                icon: '👥',
-                title: 'Vibrant Community',
-                description: 'Connect with learners studying the same courses. Share experiences, ask questions, and grow together.'
-              },
-              {
-                icon: '💬',
-                title: 'AI Study Buddy',
-                description: 'Get instant help 24/7 from our AI-powered Study Buddy. Ask any question and get detailed explanations immediately.'
-              },
-              {
-                icon: '🏆',
-                title: 'Gamification & Rewards',
-                description: 'Earn XP, build streaks, unlock achievements, and climb leaderboards as you progress through courses.'
-              },
-              {
-                icon: '🚀',
-                title: 'Share Your Expertise',
-                description: 'Create and publish courses to build your portfolio. Help others learn while establishing yourself as an educator.'
-              }
-            ].map((feature, i) => (
-              <div key={i} className={`p-8 rounded-xl border transition-all ${isDark ? 'bg-slate-700 border-slate-600 hover:bg-slate-600' : 'bg-white border-slate-200'}`}>
-                <div className="text-5xl mb-4">{feature.icon}</div>
-                <h3 className={`text-xl font-bold mb-3 ${textPrimary}`}>{feature.title}</h3>
-                <p className={textSecondary}>{feature.description}</p>
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {/* Feature 1 */}
+            <div className={`group p-8 rounded-2xl border-2 transition-all duration-300 ${
+              isDark
+                ? 'bg-slate-800/40 border-purple-700/30 hover:border-purple-500/60 hover:bg-slate-800/60'
+                : 'bg-white border-gray-100 hover:border-purple-200'
+            } hover:shadow-xl`}>
+              <div className={`w-14 h-14 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform ${
+                isDark
+                  ? 'bg-purple-900/40 group-hover:bg-purple-800/60'
+                  : 'bg-purple-100 group-hover:bg-purple-200'
+              }`}>
+                <Zap className={`w-7 h-7 ${isDark ? 'text-purple-400' : 'text-purple-600'}`} />
               </div>
-            ))}
-          </div>
-        </div>
-      </section>
+              <h4 className={`text-2xl font-bold mb-3 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                🚀 AI Course Generation
+              </h4>
+              <p className={isDark ? 'text-gray-400' : 'text-gray-600'}>
+                Generate personalized courses with a single click. Our AI creates structured content with topics, exercises, and Q&A.
+              </p>
+            </div>
 
-      {/* How It Works */}
-      <section className={`py-20 transition-colors duration-300 ${sectionBgAlt}`}>
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="text-center mb-16">
-            <h2 className={`text-4xl font-bold mb-4 ${textPrimary}`}>How CodeFlux Works</h2>
-            <p className={`text-xl ${textSecondary}`}>Three simple steps to create your first course</p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {[
-              {
-                number: '1',
-                title: 'Enter Course Details',
-                description: 'Tell us your course topic, desired duration, and difficulty level.'
-              },
-              {
-                number: '2',
-                title: 'AI Generates Content',
-                description: 'Our AI instantly creates a complete curriculum with videos, topics, and assignments.'
-              },
-              {
-                number: '3',
-                title: 'Start Teaching & Learning',
-                description: 'Publish your course and start learning or teaching immediately. No technical skills needed!'
-              }
-            ].map((step, i) => (
-              <div key={i} className="text-center">
-                <div className="w-16 h-16 bg-indigo-600 text-white rounded-full flex items-center justify-center text-3xl font-bold mx-auto mb-4">
-                  {step.number}
-                </div>
-                <h3 className={`text-2xl font-bold mb-2 ${textPrimary}`}>{step.title}</h3>
-                <p className={textSecondary}>{step.description}</p>
+            {/* Feature 2 */}
+            <div className={`group p-8 rounded-2xl border-2 transition-all duration-300 ${
+              isDark
+                ? 'bg-slate-800/40 border-pink-700/30 hover:border-pink-500/60 hover:bg-slate-800/60'
+                : 'bg-white border-gray-100 hover:border-pink-200'
+            } hover:shadow-xl`}>
+              <div className={`w-14 h-14 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform ${
+                isDark
+                  ? 'bg-pink-900/40 group-hover:bg-pink-800/60'
+                  : 'bg-pink-100 group-hover:bg-pink-200'
+              }`}>
+                <Zap className={`w-7 h-7 ${isDark ? 'text-pink-400' : 'text-pink-600'}`} />
               </div>
-            ))}
+              <h4 className={`text-2xl font-bold mb-3 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                ✏️ Quiz Center
+              </h4>
+              <p className={isDark ? 'text-gray-400' : 'text-gray-600'}>
+                Test your knowledge with AI-powered quizzes tailored to your learning pace. Get instant feedback and detailed explanations for every answer.
+              </p>
+            </div>
+
+            {/* Feature 3 */}
+            <div className={`group p-8 rounded-2xl border-2 transition-all duration-300 ${
+              isDark
+                ? 'bg-slate-800/40 border-amber-700/30 hover:border-amber-500/60 hover:bg-slate-800/60'
+                : 'bg-white border-gray-100 hover:border-amber-200'
+            } hover:shadow-xl`}>
+              <div className={`w-14 h-14 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform ${
+                isDark
+                  ? 'bg-amber-900/40 group-hover:bg-amber-800/60'
+                  : 'bg-amber-100 group-hover:bg-amber-200'
+              }`}>
+                <Trophy className={`w-7 h-7 ${isDark ? 'text-amber-400' : 'text-amber-600'}`} />
+              </div>
+              <h4 className={`text-2xl font-bold mb-3 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                🎮 Gamification & Rewards
+              </h4>
+              <p className={isDark ? 'text-gray-400' : 'text-gray-600'}>
+                Earn XP, maintain streaks, unlock badges, and climb the leaderboard. Learning has never been this fun and engaging.
+              </p>
+            </div>
+
+            {/* Feature 4 */}
+            <div className={`group p-8 rounded-2xl border-2 transition-all duration-300 ${
+              isDark
+                ? 'bg-slate-800/40 border-blue-700/30 hover:border-blue-500/60 hover:bg-slate-800/60'
+                : 'bg-white border-gray-100 hover:border-blue-200'
+            } hover:shadow-xl`}>
+              <div className={`w-14 h-14 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform ${
+                isDark
+                  ? 'bg-blue-900/40 group-hover:bg-blue-800/60'
+                  : 'bg-blue-100 group-hover:bg-blue-200'
+              }`}>
+                <Users className={`w-7 h-7 ${isDark ? 'text-blue-400' : 'text-blue-600'}`} />
+              </div>
+              <h4 className={`text-2xl font-bold mb-3 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                👥 Community & Collaboration
+              </h4>
+              <p className={isDark ? 'text-gray-400' : 'text-gray-600'}>
+                Join Study Rooms, collaborate with thousands of learners, share insights, and grow together as a community.
+              </p>
+            </div>
+
+            {/* Feature 5 */}
+            <div className={`group p-8 rounded-2xl border-2 transition-all duration-300 ${
+              isDark
+                ? 'bg-slate-800/40 border-green-700/30 hover:border-green-500/60 hover:bg-slate-800/60'
+                : 'bg-white border-gray-100 hover:border-green-200'
+            } hover:shadow-xl`}>
+              <div className={`w-14 h-14 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform ${
+                isDark
+                  ? 'bg-green-900/40 group-hover:bg-green-800/60'
+                  : 'bg-green-100 group-hover:bg-green-200'
+              }`}>
+                <BarChart3 className={`w-7 h-7 ${isDark ? 'text-green-400' : 'text-green-600'}`} />
+              </div>
+              <h4 className={`text-2xl font-bold mb-3 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                📊 Progress Tracking
+              </h4>
+              <p className={isDark ? 'text-gray-400' : 'text-gray-600'}>
+                Visualize your learning journey with detailed analytics, progress rings, and comprehensive performance metrics.
+              </p>
+            </div>
+
+            {/* Feature 6 */}
+            <div className={`group p-8 rounded-2xl border-2 transition-all duration-300 ${
+              isDark
+                ? 'bg-slate-800/40 border-purple-700/30 hover:border-purple-500/60 hover:bg-slate-800/60'
+                : 'bg-white border-gray-100 hover:border-purple-200'
+            } hover:shadow-xl`}>
+              <div className={`w-14 h-14 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform ${
+                isDark
+                  ? 'bg-purple-900/40 group-hover:bg-purple-800/60'
+                  : 'bg-purple-100 group-hover:bg-purple-200'
+              }`}>
+                <Sparkles className={`w-7 h-7 ${isDark ? 'text-purple-400' : 'text-purple-600'}`} />
+              </div>
+              <h4 className={`text-2xl font-bold mb-3 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                ✨ Personalization
+              </h4>
+              <p className={isDark ? 'text-gray-400' : 'text-gray-600'}>
+                AI adapts to your learning style and pace. Get recommendations tailored specifically to your goals and interests.
+              </p>
+            </div>
           </div>
         </div>
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 bg-gradient-to-r from-indigo-600 to-purple-600">
-        <div className="max-w-4xl mx-auto px-6 text-center">
-          <h2 className="text-5xl font-bold text-white mb-6">Ready to Transform Your Learning?</h2>
-          <p className="text-xl text-indigo-100 mb-8">Join CodeFlux today and unlock unlimited learning potential</p>
+      <section className={`py-20 transition-colors duration-300 ${
+        isDark
+          ? 'bg-gradient-to-b from-slate-900 to-slate-950'
+          : 'bg-gradient-to-b from-indigo-50 to-white'
+      }`}>
+        <div className="max-w-3xl mx-auto px-6 text-center">
+          <h2 className={`text-5xl font-bold mb-6 ${isDark ? 'text-white' : 'text-slate-900'}`}>Ready to Transform Your Learning?</h2>
+          <p className={`text-xl mb-8 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+            Join thousands of learners who are already experiencing the future of AI-powered education. Start your free journey today.
+          </p>
           <button 
             onClick={() => navigate('/dashboard')}
-            className="px-8 py-4 bg-white text-indigo-600 rounded-lg hover:bg-slate-100 transition font-bold text-lg"
+            className="px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-xl transition font-bold text-lg hover:scale-105 shadow-lg"
           >
-            Start Free Now →
+            🚀 Start Learning Today
           </button>
         </div>
       </section>
@@ -258,27 +389,6 @@ export default function Landing(){
 
           {/* Divider */}
           <div className={`border-t py-8 mt-8 ${isDark ? 'border-slate-800' : 'border-slate-700'}`}>
-            {/* Credits & Details */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
-              <div>
-                <h4 className="font-bold text-indigo-400 mb-2">🎯 Our Mission</h4>
-                <p className={`text-sm ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
-                  To democratize education by making high-quality learning accessible, affordable, and engaging for everyone, everywhere.
-                </p>
-              </div>
-              <div>
-                <h4 className="font-bold text-indigo-400 mb-2">🚀 Technology</h4>
-                <p className={`text-sm ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
-                  Built with React, Vite, Tailwind CSS, Firebase, and powered by Google's Gemini AI. Built for speed, scalability, and excellence.
-                </p>
-              </div>
-              <div>
-                <h4 className="font-bold text-indigo-400 mb-2">📞 Support</h4>
-                <p className={`text-sm ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
-                  Questions? Email us at support@codeflux.dev or visit our help center. We're here to help 24/7.
-                </p>
-              </div>
-            </div>
 
             {/* Bottom Footer */}
             <div className={`border-t py-8 ${isDark ? 'border-slate-800' : 'border-slate-700'}`}>
