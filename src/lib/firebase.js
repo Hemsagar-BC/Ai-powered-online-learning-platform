@@ -53,7 +53,8 @@ export const signInWithGoogle = async () => {
     console.log('📡 Exchanging token with backend...');
     
     // Exchange Firebase token with backend for session token
-    const response = await fetch('http://localhost:5000/api/auth/google/callback', {
+    const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+    const response = await fetch(`${API_BASE_URL}/auth/google/callback`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
