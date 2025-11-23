@@ -247,29 +247,19 @@ Code-flux-/
 
 | Page | Route | Purpose |
 |------|-------|---------|
-| 🏠 Landing | `/` | Welcome & onboarding |
+| 🏠 Home | `/` | Welcome & onboarding |
 | 📊 Dashboard | `/dashboard` | Main hub with XP stats |
 | 📚 My Learning | `/my-learning` | Enrolled courses |
-| 📖 Chapter Detail | `/courses/:id` | Course content |
+| ✏️ Quiz center | `/quiz center` | Interactive assessment |
+| 🔍 Explore | `/explore` | Explore courses |
 | 👤 Profile | `/profile` | User stats & achievements |
+| 📈 Progress | `/progress` | Progress Tracker |
 | 🎮 Gamification | `/gamification` | XP, levels, leaderboard |
-| ❓ Quiz | `/quiz/:id` | Interactive assessment |
+| 👤 Profile | `/profile` | User stats & achievements |
 | ⚙️ Settings | `/settings` | Theme & preferences |
+| 👥 Community | `/community` | Join like minded people |
 
 ---
-
-## 🎨 Responsive Breakpoints
-
-```
-Mobile:    < 640px  (xs, sm)       [Focus: Touch, single column]
-Tablet:    640px - 1024px (md, lg) [Focus: Two column layouts]
-Desktop:   > 1024px (xl, 2xl)      [Focus: Multi-column grids]
-```
-
-All components tested at:
-- **iPhone 12** (390px)
-- **iPad Pro** (1024px)
-- **Desktop** (1440px+)
 
 ---
 
@@ -277,7 +267,6 @@ All components tested at:
 
 ### Backend Endpoints
 ```
-GET  /api/health                    Health check
 GET  /api/courses                   List courses
 POST /api/courses                   Create course
 GET  /api/courses/:id               Get course details
@@ -285,7 +274,7 @@ POST /api/progress                  Update progress
 GET  /api/user/stats                User statistics
 ```
 
-### Third-Party APIs
+### APIs
 - **Gemini AI** - Course content generation
 - **YouTube Data API** - Educational video search
 - **Firebase** - Authentication & real-time database
@@ -326,9 +315,6 @@ GET  /api/user/stats                User statistics
 # Set environment variables
 # Auto-deploy on push
 ```
-
-[Full Deployment Guide](./docs/DEPLOYMENT.md)
-
 ---
 
 ## 🧪 Testing
@@ -396,14 +382,6 @@ MIT License - Free to use and modify. See [LICENSE](./LICENSE) file.
 - **Tailwind Labs** - Beautiful CSS framework
 
 ---
-
-## 📞 Support & Documentation
-
-- 📚 [Setup Guide](./docs/SETUP_GUIDE.md)
-- 🎓 [Gamification System](./docs/GAMIFICATION_INTEGRATION_COMPLETE.md)
-- 📱 [Mobile Testing](./docs/MOBILE_TESTING_CHECKLIST.md)
-- 🚀 [Deployment](./docs/DEPLOYMENT.md)
-- 🐛 [Troubleshooting](./docs/SETUP_GUIDE.md#troubleshooting)
 
 ---
 
