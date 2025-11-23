@@ -13,7 +13,14 @@ const PORT = process.env.PORT || 5000;
 
 // Middleware
 app.use(cors({
-  origin: ['http://localhost:5174', 'http://localhost:5173', 'http://localhost:5175', 'http://localhost:5176', 'http://localhost:4173'],
+  origin: [
+    'http://localhost:5174', 
+    'http://localhost:5173', 
+    'http://localhost:5175', 
+    'http://localhost:5176', 
+    'http://localhost:4173',
+    'https://ai-powered-online-learning-platform-p5izl0o82.vercel.app'
+  ],
   credentials: true
 }));
 app.use(express.json());
