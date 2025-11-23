@@ -47,7 +47,7 @@ export default function Navbar({ isMobile }){
 
       {/* Desktop Navbar */}
       {!isMobile && (
-        <header className="fixed left-60 right-0 top-0 h-20 flex items-center justify-between px-6 md:px-8 py-4 border-b bg-gradient-to-r from-slate-50 via-purple-50 to-pink-50 border-purple-200 z-40 shadow-sm hidden md:flex" style={{left: 240, height: 80}}>
+        <header className="fixed left-60 right-0 top-0 h-20 items-center justify-between px-6 md:px-8 py-4 border-b bg-gradient-to-r from-slate-50 via-purple-50 to-pink-50 border-purple-200 z-40 shadow-sm hidden md:flex" style={{left: 240, height: 80}}>
           <div className="flex items-center gap-3 md:gap-4">
             <div className="text-base md:text-lg font-semibold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">AI-Powered Learning</div>
             <div className="text-xs md:text-sm text-purple-600 hidden sm:block">Personalized • Gamified • Collaborative</div>

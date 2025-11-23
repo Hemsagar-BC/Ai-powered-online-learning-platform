@@ -59,7 +59,7 @@ export default function Sidebar({ isMobile }){
     <>
       {/* Desktop Sidebar */}
       {!isMobile && (
-        <aside className="fixed left-0 top-0 w-60 h-screen bg-gradient-to-b from-slate-900 via-purple-900 to-slate-900 border-r border-purple-500/20 z-50 flex flex-col overflow-y-auto hidden md:flex" style={{width:240}}>
+        <aside className="fixed left-0 top-0 w-60 h-screen bg-gradient-to-b from-slate-900 via-purple-900 to-slate-900 border-r border-purple-500/20 z-50 flex-col overflow-y-auto hidden md:flex" style={{width:240}}>
           <div className="p-6 flex flex-col h-full">
             {/* Logo Section */}
             <div className="mb-8">
