@@ -36,7 +36,7 @@ const googleClient = new OAuth2Client(
 const genAI = process.env.VITE_GEMINI_API_KEY ? new GoogleGenerativeAI(process.env.VITE_GEMINI_API_KEY) : null;
 
 // YouTube API Setup
-const YOUTUBE_API_KEY = process.env.VITE_YOUTUBE_API_KEY || 'AIzaSyCofp7gg86IRvUAG2sz4KaSnjo-8Jtp47w';
+const YOUTUBE_API_KEY = process.env.VITE_YOUTUBE_API_KEY;
 const YOUTUBE_API_URL = 'https://www.googleapis.com/youtube/v3';
 
 // Helper function to extract search query from chapter content
