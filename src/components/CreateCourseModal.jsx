@@ -46,7 +46,7 @@ export default function CreateCourseModal({onClose, isGuest}){
       })
 
       if (data.success && data.course) {
-        // Store course in localStorage with unique ID
+        // Ensure consistent course ID
         const courseId = data.course.id || `course_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
         const fullCourse = {
           id: courseId,
@@ -55,20 +55,32 @@ export default function CreateCourseModal({onClose, isGuest}){
           createdAt: new Date().toISOString()
         }
 
-        // Save to localStorage
+        // Save to localStorage with multiple keys for compatibility
         const courses = JSON.parse(localStorage.getItem('codeflux_courses') || '[]')
-        courses.push(fullCourse)
-        localStorage.setItem('codeflux_courses', JSON.stringify(courses))
+        
+        // Remove if already exists (update case)
+        const filteredCourses = courses.filter(c => c.id !== courseId)
+        filteredCourses.push(fullCourse)
+        
+        localStorage.setItem('codeflux_courses', JSON.stringify(filteredCourses))
+        localStorage.setItem('generatedCourses', JSON.stringify(filteredCourses))
+        
+        console.log('✅ Course saved to localStorage with ID:', courseId)
+        console.log('📊 Total courses:', filteredCourses.length)
 
         // ✅ Save to Firebase
         if (user?.email && user?.email !== 'demo@codeflux.dev') {
           try {
+            console.log('📤 Saving course to Firebase for user:', user.email)
             await saveCourseToFirebase(fullCourse, user.email)
+            console.log('✅ Course saved to Firebase successfully')
             showNotification('✅ Course saved to Firebase!', 'success')
           } catch (error) {
-            console.error('Firebase save error:', error)
+            console.error('❌ Firebase save error:', error)
             showNotification('⚠️ Course created locally (Firebase save failed)', 'warning')
           }
+        } else {
+          console.log('ℹ️ Skipping Firebase save - demo/guest user')
         }
 
         // Update user stats
@@ -83,8 +95,14 @@ export default function CreateCourseModal({onClose, isGuest}){
         const firstChapterId = fullCourse.chapters && fullCourse.chapters.length > 0 
           ? fullCourse.chapters[0].id || 1
           : 1
+        
+        console.log('🎯 Navigation details:')
+        console.log('   Course ID:', courseId)
+        console.log('   First Chapter ID:', firstChapterId)
+        console.log('   Total Chapters:', fullCourse.chapters?.length || 0)
           
         setTimeout(() => {
+          console.log('🚀 Navigating to course...')
           navigate(`/course/${courseId}/chapter/${firstChapterId}`)
           setOpen(false)
           if(onClose) onClose()

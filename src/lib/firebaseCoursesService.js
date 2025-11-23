@@ -186,13 +186,30 @@ export const deleteCourseFromFirebase = async (userEmail, courseId) => {
  */
 export const getContinueLearningCourses = async (userEmail, limit = 5) => {
   try {
-    const courses = await getUserCoursesFromFirebase(userEmail)
-    // Sort by last accessed date and limit
-    return courses
-      .sort((a, b) => new Date(b.lastAccessedAt) - new Date(a.lastAccessedAt))
-      .slice(0, limit)
+    // First try to get from Firebase
+    try {
+      const courses = await getUserCoursesFromFirebase(userEmail)
+      if (courses && courses.length > 0) {
+        // Sort by last accessed date and limit
+        return courses
+          .sort((a, b) => new Date(b.lastAccessedAt) - new Date(a.lastAccessedAt))
+          .slice(0, limit)
+      }
+    } catch (fbError) {
+      console.log('ℹ️ Firebase fetch failed, trying localStorage:', fbError.message)
+    }
+    
+    // Fallback to localStorage
+    const localCourses = JSON.parse(localStorage.getItem('codeflux_courses') || '[]')
+    if (localCourses && localCourses.length > 0) {
+      console.log('✅ Loaded', localCourses.length, 'courses from localStorage')
+      return localCourses.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).slice(0, limit)
+    }
+    
+    return []
   } catch (error) {
     console.error('❌ Error getting continue learning courses:', error.message)
-    return []
+    // Last resort: try localStorage directly
+    return JSON.parse(localStorage.getItem('codeflux_courses') || '[]').slice(0, limit)
   }
 }

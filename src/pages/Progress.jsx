@@ -47,23 +47,29 @@ export default function Progress() {
   useEffect(() => {
     const handleProgressUpdate = async () => {
       try {
+        console.log('🔄 Progress update detected, refreshing data...');
         const progressData = await getAllUserProgress();
-        console.log('🔄 Progress updated:', progressData);
+        console.log('✅ Progress data refreshed:', progressData);
         setUserProgress(progressData);
       } catch (error) {
         console.warn('⚠️ Could not fetch progress:', error.message);
-        // Set empty progress if user not authenticated - don't fail
-        setUserProgress({});
+        // Don't fail - just keep existing state
       }
     };
 
-    // Poll for updates every 1 second for better real-time feel
-    const interval = setInterval(handleProgressUpdate, 1000);
+    // Listen for custom progress update events
+    window.addEventListener('progressUpdated', handleProgressUpdate);
     
-    // Also update immediately on mount
+    // Also poll every 500ms for better real-time feel
+    const interval = setInterval(handleProgressUpdate, 500);
+    
+    // Update immediately on mount
     handleProgressUpdate();
     
-    return () => clearInterval(interval);
+    return () => {
+      window.removeEventListener('progressUpdated', handleProgressUpdate);
+      clearInterval(interval);
+    };
   }, []);
 
   if (loading) {
@@ -117,18 +123,20 @@ export default function Progress() {
             <div className="flex flex-col items-center">
               <h3 className="text-white font-semibold text-lg mb-6">Overall Progress</h3>
 
-              {/* Circular Progress */}
-              <div className="relative w-40 h-40 mb-6">
+              {/* Circular Progress - Enhanced */}
+              <div className="relative w-48 h-48 mb-8">
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie
                       data={overallData}
                       cx="50%"
                       cy="50%"
-                      innerRadius={60}
-                      outerRadius={80}
-                      paddingAngle={2}
+                      innerRadius={65}
+                      outerRadius={90}
+                      paddingAngle={3}
                       dataKey="value"
+                      startAngle={90}
+                      endAngle={-270}
                     >
                       {overallData.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
@@ -137,20 +145,28 @@ export default function Progress() {
                   </PieChart>
                 </ResponsiveContainer>
 
-                {/* Center Text */}
-                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center">
-                  <p className="text-3xl font-bold text-purple-400">{overallPercentage}%</p>
-                  <p className="text-xs text-gray-400">Complete</p>
+                {/* Center Text - Enhanced */}
+                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                  <p className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">
+                    {overallPercentage}%
+                  </p>
+                  <p className="text-sm text-gray-400 mt-2">Complete</p>
                 </div>
               </div>
 
-              <div className="w-full space-y-2 text-sm">
+              <div className="w-full space-y-3 text-sm">
                 <div className="flex items-center justify-between">
-                  <span className="text-gray-400">Completed:</span>
+                  <span className="text-gray-400 flex items-center gap-2">
+                    <span className="w-3 h-3 rounded-full bg-purple-500"></span>
+                    Completed
+                  </span>
                   <span className="text-purple-400 font-semibold">{totalCompleted} chapters</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-gray-400">Total:</span>
+                  <span className="text-gray-400 flex items-center gap-2">
+                    <span className="w-3 h-3 rounded-full bg-pink-500"></span>
+                    Total
+                  </span>
                   <span className="text-cyan-400 font-semibold">{totalChapters} chapters</span>
                 </div>
               </div>
@@ -221,17 +237,20 @@ export default function Progress() {
                   {/* Progress Section */}
                   <div className="p-6">
                     <div className="flex items-center justify-between mb-6">
-                      <div className="w-24 h-24">
+                      {/* Circular Progress - Enhanced */}
+                      <div className="relative w-32 h-32 flex items-center justify-center">
                         <ResponsiveContainer width="100%" height="100%">
                           <PieChart>
                             <Pie
                               data={courseProgressData}
                               cx="50%"
                               cy="50%"
-                              innerRadius={35}
-                              outerRadius={50}
-                              paddingAngle={1}
+                              innerRadius={45}
+                              outerRadius={64}
+                              paddingAngle={2}
                               dataKey="value"
+                              startAngle={90}
+                              endAngle={-270}
                             >
                               {courseProgressData.map((entry, index) => (
                                 <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
@@ -240,34 +259,44 @@ export default function Progress() {
                           </PieChart>
                         </ResponsiveContainer>
 
-                        {/* Center Percentage */}
-                        <div className="absolute ml-3 mt-1 text-center">
-                          <p className="text-lg font-bold text-purple-400">{completionPercentage}%</p>
+                        {/* Center Content - Improved */}
+                        <div className="absolute inset-0 flex flex-col items-center justify-center">
+                          <p className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">
+                            {completionPercentage}%
+                          </p>
+                          <p className="text-xs text-gray-400 mt-1">{completedCount}/{chapterCount}</p>
                         </div>
                       </div>
 
-                      <div className="flex-1 ml-6 space-y-2">
+                      <div className="flex-1 ml-6 space-y-3">
                         <div className="flex items-center justify-between text-sm">
-                          <span className="text-gray-400">Completed:</span>
+                          <span className="text-gray-400 flex items-center gap-2">
+                            <span className="w-3 h-3 rounded-full bg-purple-500"></span>
+                            Completed
+                          </span>
                           <span className="text-purple-400 font-semibold">{completedCount}</span>
                         </div>
                         <div className="flex items-center justify-between text-sm">
-                          <span className="text-gray-400">Remaining:</span>
+                          <span className="text-gray-400 flex items-center gap-2">
+                            <span className="w-3 h-3 rounded-full bg-pink-500"></span>
+                            Remaining
+                          </span>
                           <span className="text-cyan-400 font-semibold">{Math.max(0, chapterCount - completedCount)}</span>
                         </div>
 
+                        {/* Completion Badge */}
                         {completionPercentage === 100 && completionPercentage > 0 && (
-                          <div className="mt-3 px-2 py-1 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 rounded text-xs text-cyan-300 font-semibold text-center border border-cyan-500/30">
-                            ✨ Completed!
+                          <div className="mt-4 px-3 py-2 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 rounded-lg text-xs text-cyan-300 font-semibold text-center border border-cyan-500/30 animate-pulse">
+                            🎉 Course Completed!
                           </div>
                         )}
                       </div>
                     </div>
 
-                    {/* Progress Bar */}
-                    <div className="w-full h-2 bg-slate-700/50 rounded-full overflow-hidden mb-6 border border-slate-600/50">
+                    {/* Progress Bar - Enhanced */}
+                    <div className="w-full h-3 bg-slate-700/70 rounded-full overflow-hidden mb-6 border border-slate-600/50 shadow-inner">
                       <div
-                        className="h-full bg-gradient-to-r from-purple-500 to-pink-500 transition-all duration-500"
+                        className="h-full bg-gradient-to-r from-purple-500 via-pink-500 to-cyan-500 transition-all duration-700 rounded-full shadow-lg shadow-purple-500/50"
                         style={{ width: `${completionPercentage}%` }}
                       ></div>
                     </div>
@@ -290,8 +319,8 @@ export default function Progress() {
                     <div className="border-t border-slate-700 p-6 bg-slate-800/50">
                       <h4 className="text-white font-semibold text-sm mb-3">Chapter Progress</h4>
                       <div className="space-y-2 max-h-48 overflow-y-auto">
-                        {course.chapters.map((chapter, idx) => {
-                          const isCompleted = progress.completedChapters?.includes(chapter.id);
+            {course.chapters?.map((chapter, idx) => {
+                          const isCompleted = progress.completedChapters?.some(id => String(id) === String(chapter.id));
                           return (
                             <div
                               key={chapter.id}

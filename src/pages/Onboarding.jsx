@@ -101,9 +101,11 @@ export default function Onboarding() {
 
     try {
       setLoading(true)
+      console.log('Starting onboarding save for user:', user.uid)
       const today = formatDateForDb()
 
       // Update user document with preferences
+      console.log('Saving user preferences...')
       await setDoc(
         doc(firestore, 'users', user.uid),
         {
@@ -119,8 +121,10 @@ export default function Onboarding() {
         },
         { merge: true }
       )
+      console.log('User preferences saved successfully')
 
       // Initialize streak document
+      console.log('Initializing streak document...')
       const streakRef = doc(firestore, 'streaks', user.uid)
       const streakSnap = await getDoc(streakRef)
 
@@ -135,14 +139,24 @@ export default function Onboarding() {
           studyDays: {},
           createdAt: Timestamp.now()
         })
+        console.log('Streak document created')
       }
 
+      console.log('Onboarding save completed, navigating to dashboard')
       showNotification('✅ Onboarding complete! Welcome to StudySync!', 'success')
-      navigate('/dashboard')
+      
+      // Add a small delay before navigation to ensure data is saved
+      setTimeout(() => {
+        navigate('/dashboard')
+      }, 500)
     } catch (err) {
       console.error('Error saving preferences:', err)
+      console.error('Error details:', {
+        code: err.code,
+        message: err.message,
+        fullError: err
+      })
       showNotification('Failed to save preferences. Please try again.', 'error')
-    } finally {
       setLoading(false)
     }
   }

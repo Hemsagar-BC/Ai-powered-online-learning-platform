@@ -63,3 +63,6 @@ temp/
 # Development
 .vite/
 .turbo/
+
+# Documentation
+docs/

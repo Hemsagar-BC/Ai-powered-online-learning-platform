@@ -41,18 +41,18 @@ export default function Landing(){
           ? 'bg-slate-950/80 border-purple-800/30' 
           : 'bg-white/80 border-gray-200'
       }`}>
-        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className={`text-3xl font-bold ${isDark ? 'text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400' : 'bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent'}`}>CodeFlux</div>
-          <div className="flex items-center gap-4">
+        <div className="max-w-7xl mx-auto px-4 md:px-6 py-3 md:py-4 flex items-center justify-between">
+          <div className={`text-2xl md:text-3xl font-bold ${isDark ? 'text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400' : 'bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent'}`}>CodeFlux</div>
+          <div className="flex items-center gap-2 md:gap-4">
             <button 
               onClick={toggleTheme}
               className={`p-2 rounded-lg transition-colors ${isDark ? 'bg-slate-800 text-yellow-300 hover:bg-slate-700' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
             >
-              {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+              {isDark ? <Sun className="w-4 md:w-5 h-4 md:h-5" /> : <Moon className="w-4 md:w-5 h-4 md:h-5" />}
             </button>
             <button 
               onClick={() => navigate('/dashboard')}
-              className="px-6 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg hover:from-purple-700 hover:to-pink-700 transition font-semibold"
+              className="px-3 md:px-6 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg hover:from-purple-700 hover:to-pink-700 transition font-semibold text-sm md:text-base"
             >
               Get Started
             </button>
@@ -83,23 +83,23 @@ export default function Landing(){
           </>
         )}
 
-        <div className="relative max-w-7xl mx-auto px-6 grid md:grid-cols-2 gap-12 items-center min-h-[80vh]">
+        <div className="relative max-w-7xl mx-auto px-4 md:px-6 grid md:grid-cols-2 gap-8 md:gap-12 items-center min-h-[80vh]">
           {/* LEFT COLUMN */}
           <div className="flex flex-col justify-center">
             {/* Badge */}
-            <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full mb-6 w-fit ${
+            <div className={`inline-flex items-center gap-2 px-3 md:px-4 py-2 rounded-full mb-4 md:mb-6 w-fit text-sm md:text-base ${
               isDark
                 ? 'bg-purple-900/40 border border-purple-700/50'
                 : 'bg-purple-100 border border-purple-200'
             }`}>
               <Sparkles className={`w-4 h-4 ${isDark ? 'text-purple-300' : 'text-purple-600'}`} />
-              <span className={`text-sm font-semibold ${isDark ? 'text-purple-300' : 'text-purple-700'}`}>
+              <span className={`text-xs md:text-sm font-semibold ${isDark ? 'text-purple-300' : 'text-purple-700'}`}>
                 Powered by AI Technology
               </span>
             </div>
 
             {/* Main Heading */}
-            <h1 className={`text-6xl md:text-7xl font-black mb-6 leading-tight ${
+            <h1 className={`text-4xl md:text-6xl lg:text-7xl font-black mb-4 md:mb-6 leading-tight ${
               isDark ? 'text-white' : 'text-slate-900'
             }`}>
               <span className="bg-gradient-to-r from-purple-400 via-pink-400 to-red-400 bg-clip-text text-transparent">
@@ -112,22 +112,22 @@ export default function Landing(){
             </h1>
 
             {/* Tagline */}
-            <p className={`text-2xl font-bold mb-4 ${isDark ? 'text-purple-300' : 'text-purple-600'}`}>
+            <p className={`text-lg md:text-2xl font-bold mb-3 md:mb-4 ${isDark ? 'text-purple-300' : 'text-purple-600'}`}>
               ✨ The Future of Personalized Learning is Here
             </p>
 
             {/* Subtitle */}
-            <p className={`text-lg mb-8 max-w-xl leading-relaxed ${
+            <p className={`text-base md:text-lg mb-6 md:mb-8 max-w-xl leading-relaxed ${
               isDark ? 'text-gray-300' : 'text-gray-600'
             }`}>
               Create AI-powered courses, ace gamified challenges, connect with a vibrant community, and get instant help from your personal AI study buddy. Your learning journey starts here.
             </p>
 
             {/* Action Buttons */}
-            <div className="flex flex-col sm:flex-row gap-4 mb-8">
+            <div className="flex flex-col gap-3 md:gap-4 mb-8">
               <button
                 onClick={() => navigate('/dashboard')}
-                className={`flex-1 px-8 py-4 rounded-xl font-semibold transition-all duration-300 flex items-center justify-center gap-2 ${
+                className={`px-6 md:px-8 py-3 md:py-4 rounded-xl font-semibold transition-all duration-300 flex items-center justify-center gap-2 text-sm md:text-base ${
                   isDark
                     ? 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white'
                     : 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white'
@@ -140,7 +140,7 @@ export default function Landing(){
                 onClick={() => {
                   document.getElementById('features-section')?.scrollIntoView({ behavior: 'smooth' })
                 }}
-                className={`flex-1 px-8 py-4 rounded-xl font-semibold transition-all duration-300 border-2 ${
+                className={`px-6 md:px-8 py-3 md:py-4 rounded-xl font-semibold transition-all duration-300 border-2 text-sm md:text-base ${
                   isDark
                     ? 'border-purple-400/50 text-purple-300 hover:border-purple-300 hover:bg-purple-900/20'
                     : 'border-purple-600 text-purple-600 hover:border-purple-700 hover:bg-purple-50 bg-white'

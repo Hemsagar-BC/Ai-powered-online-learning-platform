@@ -163,15 +163,26 @@ export default function ChapterDetail() {
   const handleToggleCompletion = async () => {
     setMarkingProgress(true);
     try {
+      console.log('🔄 Toggling completion for chapter:', chapterId);
+      
       if (isChapterCompleted) {
+        console.log('➡️ Unmarking chapter as done...');
         await unmarkChapterAsDone(courseId, chapterId);
         setIsChapterCompleted(false);
+        console.log('✅ Chapter unmarked successfully');
       } else {
+        console.log('➡️ Marking chapter as done...');
         await markChapterAsDone(courseId, chapterId);
         setIsChapterCompleted(true);
+        console.log('✅ Chapter marked successfully');
       }
+      
+      // Trigger a progress refresh
+      window.dispatchEvent(new CustomEvent('progressUpdated'));
     } catch (error) {
-      console.error('Error toggling chapter completion:', error);
+      console.error('❌ Error toggling chapter completion:', error);
+      console.error('Error details:', error.message);
+      // Show error but don't break UI
     } finally {
       setMarkingProgress(false);
     }
@@ -257,28 +268,28 @@ export default function ChapterDetail() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-6 md:py-8">
         {detailsError && (
-          <div className="mb-6 bg-amber-50 border border-amber-200 rounded-lg p-4 flex items-start gap-3">
-            <Zap className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
-            <p className="text-amber-700 text-sm">{detailsError}</p>
+          <div className="mb-4 md:mb-6 bg-amber-50 border border-amber-200 rounded-lg p-3 md:p-4 flex items-start gap-2 md:gap-3">
+            <Zap className="w-4 md:w-5 h-4 md:h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+            <p className="text-amber-700 text-xs md:text-sm">{detailsError}</p>
           </div>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 md:gap-6 lg:gap-8">
           {/* Video Player - Left Sidebar */}
           <div className="lg:col-span-1">
             {selectedVideo && (
-              <div className="bg-gradient-to-br from-slate-800 to-slate-700 rounded-lg shadow-lg overflow-hidden border border-purple-500/20 sticky top-24">
-                <div className="bg-gradient-to-r from-red-600 to-red-700 px-4 py-3 text-white flex items-center gap-2">
-                  <Play className="w-5 h-5" />
-                  <span className="font-semibold text-sm">Learning Video</span>
+              <div className="bg-gradient-to-br from-slate-800 to-slate-700 rounded-lg shadow-lg overflow-hidden border border-purple-500/20 sticky top-20 md:top-24">
+                <div className="bg-gradient-to-r from-red-600 to-red-700 px-3 md:px-4 py-2 md:py-3 text-white flex items-center gap-2">
+                  <Play className="w-4 md:w-5 h-4 md:h-5" />
+                  <span className="font-semibold text-xs md:text-sm">Learning Video</span>
                 </div>
-                <div className="p-4">
+                <div className="p-3 md:p-4">
                   {/* YouTube Iframe - Auto-play */}
                   {selectedVideo?.videoId ? (
                     <iframe
-                      className="w-full aspect-video rounded-lg mb-4 border border-red-500/30"
+                      className="w-full aspect-video rounded-lg mb-3 md:mb-4 border border-red-500/30"
                       src={`https://www.youtube.com/embed/${selectedVideo.videoId}?autoplay=1&rel=0&modestbranding=1`}
                       title={selectedVideo.title}
                       frameBorder="0"
@@ -286,49 +297,49 @@ export default function ChapterDetail() {
                       allowFullScreen
                     />
                   ) : (
-                    <div className="bg-black rounded-lg mb-4 w-full aspect-video flex items-center justify-center">
-                      <Play className="w-12 h-12 text-red-500" />
+                    <div className="bg-black rounded-lg mb-3 md:mb-4 w-full aspect-video flex items-center justify-center">
+                      <Play className="w-8 md:w-12 h-8 md:h-12 text-red-500" />
                     </div>
                   )}
                   
-                  <h4 className="font-semibold text-white mb-1 text-sm line-clamp-2">{selectedVideo.title}</h4>
-                  <p className="text-xs text-gray-400 mb-3">by {selectedVideo.channel}</p>
+                  <h4 className="font-semibold text-white mb-1 text-xs md:text-sm line-clamp-2">{selectedVideo.title}</h4>
+                  <p className="text-xs text-gray-400 mb-2 md:mb-3">by {selectedVideo.channel}</p>
                   
                   {/* Video Stats */}
-                  <div className="grid grid-cols-2 gap-2 mb-4 text-xs">
+                  <div className="grid grid-cols-2 gap-2 mb-3 md:mb-4 text-xs">
                     {selectedVideo.viewCount && (
                       <div className="bg-slate-700/50 rounded p-2">
-                        <p className="text-gray-400">Views</p>
-                        <p className="text-white font-semibold">{selectedVideo.viewCount}</p>
+                        <p className="text-gray-400 text-xs">Views</p>
+                        <p className="text-white font-semibold text-xs">{selectedVideo.viewCount}</p>
                       </div>
                     )}
                     {selectedVideo.duration && (
                       <div className="bg-slate-700/50 rounded p-2">
-                        <p className="text-gray-400">Duration</p>
-                        <p className="text-white font-semibold">{selectedVideo.duration}</p>
+                        <p className="text-gray-400 text-xs">Duration</p>
+                        <p className="text-white font-semibold text-xs">{selectedVideo.duration}</p>
                       </div>
                     )}
                   </div>
                   
                   <button
-                    className="w-full inline-flex items-center justify-center gap-2 px-3 py-2 bg-red-600 hover:bg-red-700 text-white rounded text-sm transition cursor-pointer"
+                    className="w-full inline-flex items-center justify-center gap-2 px-3 py-2 bg-red-600 hover:bg-red-700 text-white rounded text-xs md:text-sm transition cursor-pointer"
                   >
                     <Play className="w-3 h-3" />
                     Playing
                   </button>
 
                   {selectedVideo.type === 'best' && (
-                    <div className="mt-3 px-2 py-1 bg-green-500/20 text-green-400 rounded text-xs font-semibold text-center">
+                    <div className="mt-2 md:mt-3 px-2 py-1 bg-green-500/20 text-green-400 rounded text-xs font-semibold text-center">
                       ⭐ Best Quality Video (Quality Score: {selectedVideo.quality || 0}/100)
                     </div>
                   )}
                   {selectedVideo.type === 'preferred' && (
-                    <div className="mt-3 px-2 py-1 bg-purple-500/20 text-purple-400 rounded text-xs font-semibold text-center">
+                    <div className="mt-2 md:mt-3 px-2 py-1 bg-purple-500/20 text-purple-400 rounded text-xs font-semibold text-center">
                       💎 Popular Video (Quality Score: {selectedVideo.quality || 0}/100)
                     </div>
                   )}
                   {!selectedVideo.type && selectedVideo.quality && (
-                    <div className="mt-3 px-2 py-1 bg-slate-700/50 text-gray-300 rounded text-xs text-center">
+                    <div className="mt-2 md:mt-3 px-2 py-1 bg-slate-700/50 text-gray-300 rounded text-xs text-center">
                       Quality Score: {selectedVideo.quality}/100
                     </div>
                   )}

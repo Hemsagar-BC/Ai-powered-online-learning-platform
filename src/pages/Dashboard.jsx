@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { FolderOpen } from 'lucide-react'
+import { FolderOpen, Zap, Award } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { useStreak } from '../contexts/StreakContext'
 import { signInWithGoogle } from '../lib/firebase'
@@ -12,6 +12,8 @@ import StreakWidget from '../components/StreakWidget'
 import { getContinueLearningCourses } from '../lib/firebaseCoursesService'
 import { useStudyTimer, formatStudyTime } from '../lib/studyTimerService'
 import { getAllUserProgress } from '../lib/progressService'
+import { calculateXP, calculateLevel, checkAchievements, getAchievementDetails, ACHIEVEMENTS, calculateSessionXP, calculateStreakBonus, XP_REWARDS } from '../lib/xpCalculator'
+import { XPDisplay } from '../components/gamification/GamificationDisplays'
 
 export default function Dashboard(){
   const navigate = useNavigate()
@@ -30,6 +32,8 @@ export default function Dashboard(){
   const [loadingCourses, setLoadingCourses] = useState(false)
   const [userProgress, setUserProgress] = useState({})
   const [allCourses, setAllCourses] = useState([])
+  const [xpData, setXpData] = useState(null)
+  const [achievements, setAchievements] = useState([])
 
   // Fetch user stats
   useEffect(() => {
@@ -75,7 +79,7 @@ export default function Dashboard(){
     fetchStats()
   }, [user?.uid])
 
-  // Load progress data
+  // Load progress data and calculate XP
   useEffect(() => {
     const loadProgress = async () => {
       try {
@@ -87,6 +91,62 @@ export default function Dashboard(){
         
         const progressData = await getAllUserProgress()
         setUserProgress(progressData)
+
+        // Calculate XP from user actions
+        let totalXP = 0
+        let lessonsCompleted = 0
+        
+        Object.values(progressData).forEach(course => {
+          if (course.completedChapters?.length > 0) {
+            lessonsCompleted += course.completedChapters.length
+            totalXP += course.completedChapters.length * XP_REWARDS.LESSON_COMPLETED
+          }
+          if (course.completed) {
+            totalXP += XP_REWARDS.COURSE_COMPLETED
+          }
+        })
+        
+        // Add study time XP
+        if (todayStudyTime > 0) {
+          totalXP += calculateSessionXP(todayStudyTime)
+        }
+        
+        // Add streak bonus
+        if (streak?.current > 0) {
+          totalXP += calculateStreakBonus(streak.current)
+        }
+        
+        // Calculate level
+        const levelInfo = calculateLevel(totalXP)
+        
+        // Set XP data
+        const xpData = {
+          currentXP: totalXP % (levelInfo.nextLevelXP - levelInfo.minXP),
+          totalXP: totalXP,
+          xpToNextLevel: levelInfo.nextLevelXP,
+          level: levelInfo.level,
+          levelTitle: levelInfo.title,
+          progress: levelInfo.progressToNextLevel
+        }
+        setXpData(xpData)
+        
+        // Check achievements
+        const userStats = {
+          lessonsCompleted,
+          coursesCompleted: allCoursesData.filter(c => {
+            const progress = progressData[c.id]
+            return progress?.completed || progress?.completedChapters?.length === c.chapters?.length
+          }).length,
+          coursesCreated: allCoursesData.length,
+          streakDays: streak?.current || 0,
+          totalStudyTime: todayStudyTime,
+          perfectQuizzes: 0,
+          achievements: []
+        }
+        
+        const unlockedAchievements = checkAchievements(userStats)
+        const achievementDetails = unlockedAchievements.map(id => getAchievementDetails(id))
+        setAchievements(achievementDetails.filter(Boolean))
       } catch (error) {
         console.error('Error loading progress:', error)
         setUserProgress({})
@@ -97,7 +157,7 @@ export default function Dashboard(){
     loadProgress()
     
     return () => clearInterval(interval)
-  }, [])
+  }, [user?.uid, todayStudyTime, streak])
 
   // Load courses from Firebase
   useEffect(() => {
@@ -134,6 +194,19 @@ export default function Dashboard(){
       setShowSignInPrompt(true)
     } else {
       setShowCreateModal(true)
+      // Award XP for course creation
+      if (xpData) {
+        const newTotalXP = xpData.totalXP + XP_REWARDS.COURSE_CREATED
+        const newLevelInfo = calculateLevel(newTotalXP)
+        const updatedXp = {
+          ...xpData,
+          totalXP: newTotalXP,
+          currentXP: newTotalXP % (newLevelInfo.nextLevelXP - newLevelInfo.minXP),
+          level: newLevelInfo.level,
+          levelTitle: newLevelInfo.title
+        }
+        setXpData(updatedXp)
+      }
     }
   }
 
@@ -220,24 +293,66 @@ export default function Dashboard(){
 
   return (
     <div className="max-w-7xl mx-auto">
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 md:mb-8 gap-4">
         <div>
-          <h1 className="text-3xl font-semibold">Welcome back 👋</h1>
-          <p className="text-slate-500">{user?.displayName || 'Learner'}, continue your learning journey</p>
+          <h1 className="text-2xl md:text-3xl font-semibold">Welcome back 👋</h1>
+          <p className="text-sm md:text-base text-slate-500">{user?.displayName || 'Learner'}, continue your learning journey</p>
         </div>
-        <div className="flex gap-3 items-center">
+        <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
           <div className="flex items-center gap-2 px-4 py-2 bg-slate-100 rounded-lg">
             <span className="text-2xl">🔥</span>
-            <span className="font-bold text-lg text-orange-600">9</span>
+            <span className="font-bold text-lg text-orange-600">{streak?.current || 0}</span>
           </div>
           <button 
             onClick={handleCreateCourse}
-            className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition font-semibold"
+            className="w-full sm:w-auto px-4 md:px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition font-semibold text-sm md:text-base"
           >
             + Create Course
           </button>
         </div>
       </div>
+
+      {/* XP and Gamification Section */}
+      <section className="mb-6 md:mb-8 grid grid-cols-1 md:grid-cols-2 gap-4">
+        {xpData && (
+          <>
+            <XPDisplay
+              currentXP={xpData.currentXP}
+              xpToNextLevel={xpData.xpToNextLevel}
+              level={xpData.level}
+              className="hover:shadow-lg transition-shadow"
+            />
+            <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg p-6 border border-green-200">
+              <div className="flex items-center gap-3 mb-4">
+                <Award size={28} className="text-green-600" />
+                <h3 className="text-lg font-bold text-gray-900">Achievements</h3>
+              </div>
+              <div className="space-y-2">
+                {achievements.length > 0 ? (
+                  <div className="flex flex-wrap gap-2">
+                    {achievements.slice(0, 5).map((ach, idx) => (
+                      <div key={idx} title={ach.description} className="flex items-center justify-center w-10 h-10 rounded-full bg-white border-2 border-green-300 text-xl cursor-pointer hover:scale-110 transition-transform">
+                        {ach.icon}
+                      </div>
+                    ))}
+                    {achievements.length > 5 && (
+                      <div className="flex items-center justify-center w-10 h-10 rounded-full bg-green-200 border-2 border-green-400 text-sm font-bold text-green-700">
+                        +{achievements.length - 5}
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <p className="text-sm text-green-600">Start learning to unlock achievements!</p>
+                )}
+              </div>
+              <div className="mt-4 pt-4 border-t border-green-200">
+                <p className="text-xs text-green-600">Total XP Earned</p>
+                <p className="text-2xl font-bold text-green-700">{xpData.totalXP}</p>
+              </div>
+            </div>
+          </>
+        )}
+      </section>
 
       {/* Sign In Prompt Modal */}
       {showSignInPrompt && (
@@ -284,18 +399,18 @@ export default function Dashboard(){
       )}
 
       {/* Your Progress */}
-      <section className="mb-8">
+      <section className="mb-6 md:mb-8">
         <div className="card bg-gradient-to-br from-purple-50 to-pink-50 border border-purple-200">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-lg font-semibold text-purple-900">Your Progress</h3>
-            <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-purple-200">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 md:mb-6 gap-2">
+            <h3 className="text-base md:text-lg font-semibold text-purple-900">Your Progress</h3>
+            <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-purple-200 w-fit">
               <span className="text-xs font-semibold text-purple-700">Completion</span>
             </span>
           </div>
-          <div className="space-y-4">
+          <div className="space-y-3 md:space-y-4">
             <div>
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm text-purple-700 font-medium">Chapters Completed</span>
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2 gap-1">
+                <span className="text-xs md:text-sm text-purple-700 font-medium">Chapters Completed</span>
                 <span className="font-semibold text-purple-900">
                   {Object.values(userProgress).reduce((sum, p) => sum + (p.completedChapters?.length || 0), 0)}/{allCourses.reduce((sum, c) => sum + (c.chapters?.length || 0), 0)}
                 </span>
@@ -352,7 +467,13 @@ export default function Dashboard(){
           </button>
 
           <button 
-            onClick={() => navigate('/quiz')}
+            onClick={() => {
+              navigate('/quiz')
+              // Award XP for taking a quiz
+              const userId = user?.uid || 'guest'
+              const updatedXp = addXP(userId, XP_REWARDS.QUIZ_ATTEMPTED, 'Quiz Attempted')
+              setXpData(updatedXp)
+            }}
             className="card p-6 text-center hover:shadow-lg transition-shadow cursor-pointer group bg-gradient-to-br from-purple-50 to-pink-50 border border-purple-200 hover:border-purple-400"
           >
             <div className="text-4xl mb-3 group-hover:scale-110 transition-transform">✏️</div>
@@ -361,7 +482,13 @@ export default function Dashboard(){
           </button>
 
           <button 
-            onClick={() => navigate('/community')}
+            onClick={() => {
+              navigate('/community')
+              // Award XP for visiting community
+              const userId = user?.uid || 'guest'
+              const updatedXp = addXP(userId, XP_REWARDS.COMMUNITY_POST, 'Community Engagement')
+              setXpData(updatedXp)
+            }}
             className="card p-6 text-center hover:shadow-lg transition-shadow cursor-pointer group bg-gradient-to-br from-purple-50 to-pink-50 border border-purple-200 hover:border-purple-400"
           >
             <div className="text-4xl mb-3 group-hover:scale-110 transition-transform">👥</div>

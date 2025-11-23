@@ -6,7 +6,7 @@
  * - Upload date (recent content)
  */
 
-const YOUTUBE_API_KEY = import.meta.env.VITE_YOUTUBE_API_KEY || 'AIzaSyCofp7gg86IRvUAG2sz4KaSnjo-8Jtp47w'
+const YOUTUBE_API_KEY = import.meta.env.VITE_YOUTUBE_API_KEY
 
 /**
  * Search for best YouTube video based on topic

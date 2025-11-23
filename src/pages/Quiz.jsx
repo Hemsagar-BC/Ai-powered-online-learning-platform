@@ -18,33 +18,39 @@ const Quiz = () => {
         setLoading(true);
 
         if (!auth.currentUser) {
-          console.log('No user logged in');
+          console.log('No user logged in, loading from localStorage');
+          // Fallback to localStorage only
+          const localCourses = JSON.parse(localStorage.getItem('codeflux_courses') || '[]') ||
+                               JSON.parse(localStorage.getItem('courses') || '[]') || [];
+          console.log('Loaded courses from localStorage:', localCourses.length);
+          setCourses(localCourses);
           setLoading(false);
           return;
         }
 
         // Load from Firebase
+        console.log('📱 Loading courses for quizzes from Firebase...');
         const firebaseCourses = await getContinueLearningCourses();
 
         if (firebaseCourses && firebaseCourses.length > 0) {
-          console.log('Loaded courses from Firebase:', firebaseCourses);
+          console.log('✅ Loaded courses from Firebase:', firebaseCourses.length);
           setCourses(firebaseCourses);
         } else {
           // Fallback to localStorage
+          console.log('ℹ️ No Firebase courses, trying localStorage...');
           const localCourses =
-            JSON.parse(localStorage.getItem('codeflux_courses')) ||
-            JSON.parse(localStorage.getItem('courses')) ||
-            [];
-          console.log('Loaded courses from localStorage:', localCourses);
+            JSON.parse(localStorage.getItem('codeflux_courses') || '[]') ||
+            JSON.parse(localStorage.getItem('courses') || '[]') || [];
+          console.log('✅ Loaded courses from localStorage:', localCourses.length);
           setCourses(localCourses);
         }
       } catch (error) {
         console.error('Error loading courses:', error);
         // Fallback
         const localCourses =
-          JSON.parse(localStorage.getItem('codeflux_courses')) ||
-          JSON.parse(localStorage.getItem('courses')) ||
-          [];
+          JSON.parse(localStorage.getItem('codeflux_courses') || '[]') ||
+          JSON.parse(localStorage.getItem('courses') || '[]') || [];
+        console.log('✅ Fallback: Loaded courses from localStorage:', localCourses.length);
         setCourses(localCourses);
       } finally {
         setLoading(false);
