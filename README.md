@@ -674,12 +674,6 @@ For more troubleshooting, see [SETUP_GUIDE.md](./SETUP_GUIDE.md).
 
 ---
 
-## 👥 Team
-
-**Developers:**
-- **Pushkar R Deshpande** - Full-stack development
-- **Hamsagar BC** - UI/UX design
-- **N Shreeraksha** - Backend architecture
 
 ---
 
@@ -689,11 +683,9 @@ For more troubleshooting, see [SETUP_GUIDE.md](./SETUP_GUIDE.md).
 
 ⭐ **Star this repo if you find it helpful!**
 
-[GitHub](https://github.com/pushkarrd/Code-flux-) • [Issues](https://github.com/pushkarrd/Code-flux-/issues) • [Discussions](https://github.com/pushkarrd/Code-flux-/discussions)
 
 ---
 
-**Version** 2.0.0 | **Status** ✅ Production Ready | **Last Updated** November 23, 2025
 
 </div>
 
