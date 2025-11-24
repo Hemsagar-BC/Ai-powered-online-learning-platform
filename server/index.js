@@ -19,7 +19,7 @@ app.use(cors({
     'http://localhost:5175', 
     'http://localhost:5176', 
     'http://localhost:4173',
-    'https://ai-powered-online-learning-platform-p5izl0o82.vercel.app'
+    'https://ai-powered-online-learning-platform-coral.vercel.app/'
   ],
   credentials: true
 }));
