@@ -9,7 +9,6 @@ import ChapterDetail from './pages/ChapterDetail'
 import Profile from './pages/Profile'
 import Community from './pages/Community'
 import Settings from './pages/Settings'
-import Onboarding from './pages/Onboarding'
 import StudyTimer from './pages/StudyTimer'
 import Explore from './pages/Explore'
 import Progress from './pages/Progress'
@@ -44,10 +43,6 @@ export default function App(){
         <Routes>
           <Route path="/" element={<Landing/>} />
           <Route path="/landing" element={<Landing/>} />
-        </Routes>
-      ) : isOnboarding ? (
-        <Routes>
-          <Route path="/onboarding" element={<Onboarding/>} />
         </Routes>
       ) : isStudyTimer ? (
         <Routes>
